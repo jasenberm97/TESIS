@@ -42,7 +42,7 @@ class DatosCuentaForm(forms.Form):
     )
 
     def __init__(self, *args, usuario=None, **kwargs):
-        """usuario = None al crear; al editar, el usuario que se está modificando."""
+        """usuario = None al crear; al editar, el usuario que se está modificando. """
         super().__init__(*args, **kwargs)
         self.usuario_actual = usuario
         if usuario is not None:
