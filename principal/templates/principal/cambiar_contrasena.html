@@ -1,0 +1,91 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Cambiar contraseña{% endblock %}
+{% block titulo_pagina %}Cambiar contraseña{% endblock %}
+
+{% block estilos %}
+<style>
+  .contenedor-clave { max-width: 520px; }
+  .tarjeta h2 { margin: 0 0 4px; font-size: 1.15rem; }
+  .tarjeta .ayuda { margin: 0 0 20px; font-size: .88rem; color: var(--texto-suave); }
+
+  .campo { margin-bottom: 16px; }
+  .campo label { display: block; font-size: .86rem; font-weight: 600; margin-bottom: 6px; color: #33413a; }
+  .campo input { width: 100%; padding: 10px 44px 10px 12px; border: 1px solid #c9d6ce; border-radius: 9px; font-size: .95rem; background: #fbfdfc; }
+  .campo input:focus { outline: none; border-color: var(--verde-medio); box-shadow: 0 0 0 3px rgba(63,143,99,.15); background: #fff; }
+  .clave { position: relative; }
+  .ver-clave { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; padding: 6px; cursor: pointer; color: #6b7a72; display: flex; }
+  .ver-clave:hover { color: var(--verde); }
+  .ver-clave svg { width: 20px; height: 20px; }
+
+  .requisitos { font-size: .8rem; color: var(--texto-suave); margin-top: 8px; }
+  .requisitos ul { margin: 4px 0 0; padding-left: 18px; }
+  .error { color: #b42318; font-size: .82rem; margin: 5px 0 0; }
+
+  .acciones { display: flex; gap: 10px; align-items: center; margin-top: 8px; }
+  .btn-guardar { padding: 10px 20px; background: var(--verde); color: #fff; border: 0; border-radius: 9px; font-weight: 600; font-size: .92rem; cursor: pointer; }
+  .btn-guardar:hover { background: #164a2e; }
+  .btn-cancelar { padding: 10px 16px; border-radius: 9px; color: var(--texto-suave); text-decoration: none; font-size: .9rem; }
+  .btn-cancelar:hover { color: #1f2a24; background: #eef2ef; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor-clave">
+  {% if user.rol == "ESTUDIANTE" %}
+    <a class="volver" href="{% url 'estudiantes:mi_perfil' %}">← Volver a Mi perfil</a>
+  {% else %}
+    <a class="volver" href="{% url 'principal:panel' %}">← Volver al inicio</a>
+  {% endif %}
+
+  <section class="tarjeta">
+    <h2>Cambia tu contraseña</h2>
+    <p class="ayuda">Por seguridad, primero escribe tu contraseña actual.</p>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for e in form.non_field_errors %}<p class="error">{{ e }}</p>{% endfor %}
+
+      {% for campo in form %}
+        <div class="campo">
+          {{ campo.label_tag }}
+          <div class="clave">
+            {{ campo }}
+            <button type="button" class="ver-clave" data-objetivo="{{ campo.id_for_label }}" aria-label="Mostrar contraseña"></button>
+          </div>
+          {% for e in campo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+          {% if campo.name == "new_password1" and campo.help_text %}
+            <div class="requisitos">{{ campo.help_text|safe }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+
+      <div class="acciones">
+        <button type="submit" class="btn-guardar">Cambiar contraseña</button>
+        {% if user.rol == "ESTUDIANTE" %}
+          <a class="btn-cancelar" href="{% url 'estudiantes:mi_perfil' %}">Cancelar</a>
+        {% else %}
+          <a class="btn-cancelar" href="{% url 'principal:panel' %}">Cancelar</a>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const OJO_ABIERTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const OJO_CERRADO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+  document.querySelectorAll(".ver-clave").forEach((boton) => {
+    const campo = document.getElementById(boton.dataset.objetivo);
+    boton.innerHTML = OJO_ABIERTO;
+    boton.addEventListener("click", () => {
+      const oculto = campo.type === "password";
+      campo.type = oculto ? "text" : "password";
+      boton.innerHTML = oculto ? OJO_CERRADO : OJO_ABIERTO;
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aviso de privacidad | Bienestar Universitario UAE</title>
+  <style>
+    body { font-family: system-ui, "Segoe UI", Arial, sans-serif; background: #f3f6f4; margin: 0; color: #1f2a24; line-height: 1.6; }
+    .tarjeta { max-width: 760px; margin: 32px auto; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; color: #1d5c3a; }
+    h2 { font-size: 1.05rem; color: #1d5c3a; margin: 24px 0 6px; }
+    .sub { margin: 0 0 8px; color: #5b6b62; }
+    .version { font-size: .8rem; color: #5b6b62; margin-bottom: 20px; }
+    .aviso-prueba { background: #fff6e0; border: 1px solid #f0d58c; color: #7a5a00; padding: 10px 12px; border-radius: 8px; font-size: .88rem; }
+    ul { padding-left: 20px; margin: 6px 0; }
+    li { margin-bottom: 4px; }
+    .volver { display: inline-block; margin-top: 24px; padding: 10px 18px; background: #1d5c3a; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; }
+    .volver:hover { background: #164a2e; }
+    @media (max-width: 600px) { .tarjeta { margin: 0; border-radius: 0; padding: 22px 16px; } }
+  </style>
+</head>
+<body>
+<main class="tarjeta">
+  <h1>Aviso de privacidad y tratamiento de datos personales</h1>
+  <p class="sub">Bienestar Universitario — Universidad Agraria del Ecuador</p>
+  <p class="version">Versión 1.0 — octubre de 2026</p>
+
+  <p class="aviso-prueba">
+    Documento preliminar elaborado para el prototipo del sistema. Su contenido final debe ser revisado
+    por el área legal o el delegado de protección de datos de la universidad.
+  </p>
+
+  <h2>1. Responsable del tratamiento</h2>
+  <p>
+    El responsable de tus datos es la Universidad Agraria del Ecuador, a través del Departamento de
+    Bienestar Universitario, conforme a la Ley Orgánica de Protección de Datos Personales (LOPDP).
+  </p>
+
+  <h2>2. Datos que recogemos</h2>
+  <ul>
+    <li><strong>Identificación:</strong> cédula, nombres, apellidos, fecha de nacimiento y sexo.</li>
+    <li><strong>Contacto:</strong> correo electrónico y teléfono celular.</li>
+    <li><strong>Académicos:</strong> facultad, carrera, semestre y código estudiantil.</li>
+    <li>
+      <strong>Salud (datos sensibles):</strong> información de las atenciones en Medicina, Odontología
+      y Psicología, como historias clínicas, diagnósticos, recetas, órdenes y resultados de exámenes,
+      certificados médicos y necesidades educativas especiales (NEE).
+    </li>
+  </ul>
+
+  <h2>3. Para qué usamos tus datos</h2>
+  <ul>
+    <li>Crear tu cuenta y permitirte agendar, cancelar o reprogramar citas.</li>
+    <li>Brindarte atención médica, odontológica y psicológica, y llevar tu historia clínica.</li>
+    <li>Emitir recetas, órdenes de exámenes y certificados médicos.</li>
+    <li>Gestionar adaptaciones académicas por NEE. Esto se hace solo si das un consentimiento adicional y específico.</li>
+    <li>Elaborar estadísticas internas con datos anonimizados, sin identificarte.</li>
+  </ul>
+
+  <h2>4. Quién puede ver tus datos</h2>
+  <ul>
+    <li>Solo el profesional del área que te atiende puede ver tu información de salud de esa área.</li>
+    <li>
+      Los docentes únicamente reciben la adaptación académica que deben aplicar. Nunca ven tus sesiones,
+      diagnósticos ni historia clínica.
+    </li>
+    <li>Tus datos no se venden ni se comparten con terceros, salvo por obligación legal.</li>
+  </ul>
+
+  <h2>5. Seguridad y conservación</h2>
+  <p>
+    Tus datos se guardan en servidores de la universidad, con acceso restringido por usuario y perfil,
+    y contraseñas cifradas. Se conservarán durante el tiempo que establezca la normativa aplicable a
+    registros de salud y académicos.
+  </p>
+
+  <h2>6. Tus derechos</h2>
+  <p>Según la LOPDP, puedes solicitar en cualquier momento:</p>
+  <ul>
+    <li><strong>Acceso:</strong> saber qué datos tuyos tenemos.</li>
+    <li><strong>Rectificación y actualización:</strong> corregir datos incorrectos o desactualizados.</li>
+    <li><strong>Eliminación:</strong> pedir que se borren, salvo los que la ley obligue a conservar.</li>
+    <li><strong>Oposición y suspensión:</strong> oponerte a ciertos usos de tus datos.</li>
+    <li><strong>Portabilidad:</strong> recibir tus datos en un formato que puedas usar.</li>
+  </ul>
+
+  <h2>7. Consentimiento</h2>
+  <p>
+    Al marcar la casilla de autorización en el formulario de registro, aceptas el tratamiento de tus
+    datos según este aviso. Puedes revocar tu consentimiento cuando quieras. En ese caso no podrás usar
+    el sistema en línea, pero podrás seguir recibiendo atención presencial en Bienestar Universitario.
+  </p>
+
+  <h2>8. Contacto</h2>
+  <p>
+    Para ejercer tus derechos o hacer consultas, acude al Departamento de Bienestar Universitario o
+    escribe a: <strong>[correo de contacto por definir]</strong>.
+  </p>
+
+  <a class="volver" href="{% url 'estudiantes:registro' %}">Volver al registro</a>
+</main>
+</body>
+</html>

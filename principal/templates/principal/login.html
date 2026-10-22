@@ -1,0 +1,156 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión | Bienestar Universitario UAE</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, "Segoe UI", Arial, sans-serif; margin: 0; color: #1f2a24;
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
+      background: linear-gradient(135deg, #e8f1ec 0%, #f7faf8 50%, #e3eee8 100%);
+    }
+    .contenedor {
+      width: 100%; max-width: 940px; display: grid; grid-template-columns: 1fr 1fr;
+      background: #fff; border-radius: 18px; overflow: hidden;
+      box-shadow: 0 12px 40px rgba(29, 92, 58, .12);
+    }
+
+    /* ---------- Panel izquierdo ---------- */
+    .info {
+      background: #f1f8f4; padding: 48px 40px; display: flex; flex-direction: column; justify-content: center;
+      border-right: 1px solid #e1ece6; position: relative; overflow: hidden;
+    }
+    .info::before, .info::after {
+      content: ""; position: absolute; border-radius: 50%; background: rgba(63, 143, 99, .08);
+    }
+    .info::before { width: 260px; height: 260px; top: -90px; right: -90px; }
+    .info::after  { width: 180px; height: 180px; bottom: -60px; left: -60px; }
+    .etiqueta { font-size: .78rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #3f8f63; margin: 0 0 10px; }
+    .info h2 { margin: 0 0 10px; font-size: 1.15rem; font-weight: 600; line-height: 1.4; color: #2d6b49; }
+    .info > p { margin: 0 0 28px; color: #4d5d54; line-height: 1.55; }
+    .servicios { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; position: relative; z-index: 1; }
+    .servicios li { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid #dcebe2; border-radius: 10px; padding: 10px 14px; }
+    .servicios .icono { width: 36px; height: 36px; border-radius: 50%; background: #e3f1e8; display: grid; place-items: center; font-size: 1.1rem; flex-shrink: 0; }
+    .servicios strong { display: block; font-size: .95rem; }
+    .servicios span { font-size: .82rem; color: #5b6b62; }
+
+    /* ---------- Panel derecho (formulario) ---------- */
+    .formulario { padding: 44px 40px; display: flex; flex-direction: column; justify-content: center; }
+    .logo { display: block; width: 100%; max-width: 280px; height: auto; margin: 0 auto 26px; }
+    .formulario h1 { margin: 0 0 4px; font-size: 1.4rem; color: #1f2a24; }
+    .formulario .sub { margin: 0 0 22px; color: #5b6b62; font-size: .92rem; }
+
+    .campo { margin-bottom: 16px; }
+    label { display: block; font-size: .88rem; font-weight: 600; margin-bottom: 6px; color: #33413a; }
+    input {
+      width: 100%; padding: 11px 12px; border: 1px solid #c9d6ce; border-radius: 9px; font-size: 1rem; background: #fbfdfc;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus { outline: none; border-color: #3f8f63; box-shadow: 0 0 0 3px rgba(63, 143, 99, .15); background: #fff; }
+    .alerta { background: #fdecea; border: 1px solid #f6c9c4; color: #b42318; padding: 10px 12px; border-radius: 9px; margin-bottom: 16px; font-size: .88rem; }
+
+    .clave { position: relative; }
+    .clave input { padding-right: 46px; }
+    .ver-clave { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; padding: 6px; cursor: pointer; color: #6b7a72; display: flex; }
+    .ver-clave:hover { color: #1d5c3a; }
+    .ver-clave svg { width: 20px; height: 20px; }
+
+    .btn-principal {
+      width: 100%; padding: 12px; margin-top: 6px; background: #1d5c3a; color: #fff; border: 0; border-radius: 9px;
+      font-size: 1rem; font-weight: 600; cursor: pointer; transition: background .15s, transform .05s;
+    }
+    .btn-principal:hover { background: #164a2e; }
+    .btn-principal:active { transform: translateY(1px); }
+
+    .separador { display: flex; align-items: center; gap: 10px; margin: 22px 0 14px; color: #8a978f; font-size: .8rem; }
+    .separador::before, .separador::after { content: ""; flex: 1; height: 1px; background: #e1ece6; }
+    .btn-secundario {
+      display: block; text-align: center; padding: 11px; border: 1px solid #c9d6ce; border-radius: 9px;
+      color: #1d5c3a; font-weight: 600; text-decoration: none; transition: background .15s, border-color .15s;
+    }
+    .btn-secundario:hover { background: #f1f8f4; border-color: #3f8f63; }
+    .pie { margin: 24px 0 0; text-align: center; font-size: .75rem; color: #8a978f; }
+
+    @media (max-width: 760px) {
+      body { padding: 0; align-items: stretch; }
+      .contenedor { grid-template-columns: 1fr; border-radius: 0; box-shadow: none; min-height: 100vh; }
+      .info { display: none; }
+      .formulario { padding: 32px 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="contenedor">
+
+  <!-- Panel izquierdo -->
+  <section class="info">
+    <p class="etiqueta">Departamento de Bienestar Universitario</p>
+    <h2>Sistema de gestión de citas y atenciones</h2>
+    <ul class="servicios">
+      <li><span class="icono">🩺</span><div><strong>Medicina</strong><span>Consultas, recetas y certificados</span></div></li>
+      <li><span class="icono">🦷</span><div><strong>Odontología</strong><span>Atención y control dental</span></div></li>
+      <li><span class="icono">🧠</span><div><strong>Psicología</strong><span>Orientación y acompañamiento</span></div></li>
+    </ul>
+  </section>
+
+  <!-- Panel derecho -->
+  <section class="formulario">
+    <img class="logo" src="{% static 'principal/img/logo_uae.png' %}" alt="Universidad Agraria del Ecuador">
+
+    <h1>Iniciar sesión</h1>
+    <p class="sub">Ingresa con tu cédula y contraseña.</p>
+
+    {% if form.non_field_errors %}
+      <div class="alerta">{% for e in form.non_field_errors %}{{ e }} {% endfor %}</div>
+    {% endif %}
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}">
+
+      <div class="campo">
+        <label for="id_username">Cédula</label>
+        <input type="text" name="username" id="id_username" maxlength="10" inputmode="numeric"
+               placeholder="Ej.: 0912345678" autocomplete="username" autofocus
+               value="{{ form.username.value|default_if_none:'' }}">
+      </div>
+
+      <div class="campo">
+        <label for="id_password">Contraseña</label>
+        <div class="clave">
+          <input type="password" name="password" id="id_password" placeholder="Tu contraseña" autocomplete="current-password">
+          <button type="button" class="ver-clave" data-objetivo="id_password" aria-label="Mostrar contraseña"></button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-principal">Iniciar sesión</button>
+    </form>
+
+    <div class="separador">¿Eres estudiante y no tienes cuenta?</div>
+    <a class="btn-secundario" href="{% url 'estudiantes:registro' %}">Crear mi cuenta</a>
+
+    <p class="pie">© {% now "Y" %} Universidad Agraria del Ecuador · Bienestar Universitario</p>
+  </section>
+
+</div>
+
+<script>
+  const OJO_ABIERTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const OJO_CERRADO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+  document.querySelectorAll(".ver-clave").forEach((boton) => {
+    const campo = document.getElementById(boton.dataset.objetivo);
+    boton.innerHTML = OJO_ABIERTO;
+    boton.addEventListener("click", () => {
+      const oculto = campo.type === "password";
+      campo.type = oculto ? "text" : "password";
+      boton.innerHTML = oculto ? OJO_CERRADO : OJO_ABIERTO;
+      boton.setAttribute("aria-label", oculto ? "Ocultar contraseña" : "Mostrar contraseña");
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}{% if u.persona %}{{ u.persona.nombre_completo }}{% else %}Cuenta técnica{% endif %}{% endblock %}
+{% block titulo_pagina %}Usuarios{% endblock %}
+
+{% block estilos %}
+  {% include "usuarios/_estilos_formulario.html" %}
+  <style>
+    .cabecera-usuario { background: #fff; border: 1px solid #e3e8e5; border-radius: 16px; padding: 24px;
+                        display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-bottom: 20px; }
+    .cabecera-usuario .avatar { width: 64px; height: 64px; border-radius: 50%; background: #1f5f3e; color: #fff;
+                                font-weight: 700; font-size: 1.3rem; display: flex; align-items: center;
+                                justify-content: center; flex-shrink: 0; }
+    .cabecera-usuario .info { flex: 1 1 260px; }
+    .cabecera-usuario h2 { margin: 0 0 4px; color: #184c32; font-size: 1.4rem; }
+    .cabecera-usuario .cedula { color: #5b6661; margin-bottom: 10px; }
+    .insignias { display: flex; gap: 8px; flex-wrap: wrap; }
+    .insignia { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+    .insignia.perfil { border: 1px solid #1f5f3e; color: #1f5f3e; background: #fff; }
+    .insignia.activo { background: #1f5f3e; color: #fff; }
+    .insignia.inactivo { background: #6b7570; color: #fff; }
+
+    .fichas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    @media (max-width: 800px) { .fichas { grid-template-columns: 1fr; } }
+    .ficha { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; padding: 22px 24px; }
+    .ficha h3 { margin: 0 0 14px; color: #184c32; font-size: 1.05rem; }
+    .ficha dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 10px 18px; }
+    .ficha dt { color: #5b6661; }
+    .ficha dd { margin: 0; color: #1f2a25; font-weight: 600; text-align: right; }
+  </style>
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Ficha del usuario</h2>
+    <a href="{% url 'usuarios:lista' %}" class="volver">← Volver a usuarios</a>
+  </div>
+
+  <div class="cabecera-usuario">
+    <div class="avatar">
+      {% if u.persona %}{{ u.persona.nombres|slice:":1"|upper }}{{ u.persona.apellidos|slice:":1"|upper }}{% else %}AD{% endif %}
+    </div>
+    <div class="info">
+      <h2>{% if u.persona %}{{ u.persona.nombre_completo }}{% else %}Cuenta técnica{% endif %}</h2>
+      <div class="cedula">Cédula {{ u.cedula }}</div>
+      <div class="insignias">
+        <span class="insignia perfil">{{ u.perfil }}</span>
+        {% if u.is_active %}
+          <span class="insignia activo">Activo</span>
+        {% else %}
+          <span class="insignia inactivo">Desactivado</span>
+        {% endif %}
+      </div>
+    </div>
+    {% if u.persona %}
+      <a href="{% url 'usuarios:editar' u.pk %}" class="boton primario">Editar datos</a>
+    {% endif %}
+  </div>
+
+  <div class="fichas">
+
+    {% if u.persona %}
+      <div class="ficha">
+        <h3>Datos personales</h3>
+        <dl>
+          <dt>Nombres</dt><dd>{{ u.persona.nombres }}</dd>
+          <dt>Apellidos</dt><dd>{{ u.persona.apellidos }}</dd>
+          <dt>Fecha de nacimiento</dt><dd>{{ u.persona.fecha_nacimiento|date:"d/m/Y" }}</dd>
+          <dt>Edad</dt><dd>{{ u.persona.edad }} años</dd>
+          <dt>Sexo</dt><dd>{{ u.persona.get_sexo_display }}</dd>
+          <dt>Celular</dt><dd>{{ u.persona.telefono|default:"—" }}</dd>
+        </dl>
+      </div>
+    {% endif %}
+
+    <div class="ficha">
+      <h3>Cuenta de acceso</h3>
+      <dl>
+        <dt>Usuario (cédula)</dt><dd>{{ u.cedula }}</dd>
+        <dt>Correo</dt><dd>{{ u.email }}</dd>
+        <dt>Estado</dt><dd>{% if u.is_active %}Activo{% else %}Desactivado{% endif %}</dd>
+        <dt>Creado el</dt><dd>{{ u.date_joined|date:"d/m/Y H:i" }}</dd>
+        <dt>Último acceso</dt><dd>{{ u.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</dd>
+      </dl>
+    </div>
+
+    {% if registro and u.rol == "PERSONAL" %}
+      <div class="ficha">
+        <h3>Datos profesionales</h3>
+        <dl>
+          <dt>Área</dt><dd>{{ registro.area }}</dd>
+          <dt>Cargo</dt><dd>{{ registro.cargo }}</dd>
+          <dt>Registro profesional</dt><dd>{{ registro.registro_profesional|default:"—" }}</dd>
+          <dt>Fecha de ingreso</dt><dd>{{ registro.fecha_ingreso|date:"d/m/Y" }}</dd>
+          <dt>Fecha de salida</dt><dd>{{ registro.fecha_salida|date:"d/m/Y"|default:"En funciones" }}</dd>
+        </dl>
+      </div>
+    {% elif registro and u.rol == "DOCENTE" %}
+      <div class="ficha">
+        <h3>Datos académicos</h3>
+        <dl>
+          <dt>Facultad</dt><dd>{{ registro.facultad }}</dd>
+          <dt>Título académico</dt><dd>{{ registro.titulo_academico|default:"—" }}</dd>
+        </dl>
+      </div>
+    {% elif registro and u.rol == "ESTUDIANTE" %}
+      <div class="ficha">
+        <h3>Datos académicos</h3>
+        <dl>
+          <dt>Código estudiantil</dt><dd>{{ registro.codigo_estudiantil }}</dd>
+          <dt>Facultad</dt><dd>{{ registro.carrera.facultad }}</dd>
+          <dt>Carrera</dt><dd>{{ registro.carrera }}</dd>
+          <dt>Semestre</dt><dd>{{ registro.semestre }}.º</dd>
+          <dt>Estado académico</dt><dd>{{ registro.get_estado_academico_display }}</dd>
+          <dt>Consentimiento de datos</dt><dd>{{ registro.fecha_consentimiento|date:"d/m/Y H:i"|default:"No registrado" }}</dd>
+        </dl>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

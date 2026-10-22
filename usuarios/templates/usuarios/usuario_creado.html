@@ -1,0 +1,73 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Usuario creado{% endblock %}
+{% block titulo_pagina %}Usuarios{% endblock %}
+
+{% block estilos %}
+  {% include "usuarios/_estilos_formulario.html" %}
+  <style>
+    .confirmacion { max-width: 640px; margin: 20px auto; background: #fff; border: 1px solid #e3e8e5;
+                    border-radius: 16px; padding: 40px; text-align: center; }
+    .confirmacion .icono { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%; background: #1f5f3e;
+                           color: #fff; display: flex; align-items: center; justify-content: center; }
+    .confirmacion h2 { margin: 0 0 6px; color: #184c32; }
+    .confirmacion .sub { margin: 0 0 26px; color: #5b6661; }
+    .datos { text-align: left; border: 1px solid #e3e8e5; border-radius: 12px; overflow: hidden; margin-bottom: 22px; }
+    .datos div { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid #eef2f0; }
+    .datos div:last-child { border-bottom: none; }
+    .datos span { color: #5b6661; }
+    .datos strong { color: #1f2a25; text-align: right; }
+    .clave-caja { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #184c32;
+                  color: #fff; border-radius: 12px; padding: 14px 18px; margin-bottom: 14px; }
+    .clave-caja .etiqueta { font-size: .8rem; opacity: .85; text-align: left; }
+    .clave-caja code { font-size: 1.35rem; letter-spacing: .08em; font-weight: 700; }
+    .clave-caja button { background: #fff; color: #184c32; border: none; border-radius: 8px; padding: 8px 14px;
+                         font: inherit; font-weight: 600; cursor: pointer; }
+    .aviso { color: #7c2b20; font-size: .9rem; font-weight: 600; margin-bottom: 26px; }
+    .confirmacion .acciones-form { justify-content: center; }
+  </style>
+{% endblock %}
+
+{% block contenido %}
+<div class="confirmacion">
+  <div class="icono">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+         stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+  </div>
+  <h2>Usuario creado correctamente</h2>
+  <p class="sub">Entregue estos datos de acceso al profesional.</p>
+
+  <div class="datos">
+    <div><span>Nombre</span><strong>{{ nuevo.persona.nombre_completo }}</strong></div>
+    <div><span>Perfil</span><strong>{{ nuevo.perfil }}</strong></div>
+    <div><span>Usuario (cédula)</span><strong>{{ nuevo.cedula }}</strong></div>
+    <div><span>Correo</span><strong>{{ nuevo.email }}</strong></div>
+  </div>
+
+  <div class="clave-caja">
+    <div>
+      <div class="etiqueta">Contraseña temporal</div>
+      <code id="clave">{{ contrasena }}</code>
+    </div>
+    <button type="button" id="copiar">Copiar</button>
+  </div>
+  <p class="aviso">Esta contraseña se muestra una sola vez. Anótela o cópiela antes de salir de esta página.</p>
+
+  <div class="acciones-form">
+    <a href="{% url 'usuarios:nuevo' %}" class="boton secundario">Crear otro</a>
+    <a href="{% url 'usuarios:lista' %}" class="boton primario">Ir a usuarios</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById("copiar").addEventListener("click", function () {
+    const boton = this;
+    navigator.clipboard.writeText(document.getElementById("clave").textContent).then(function () {
+      boton.textContent = "¡Copiada!";
+      setTimeout(function () { boton.textContent = "Copiar"; }, 2000);
+    });
+  });
+</script>
+{% endblock %}

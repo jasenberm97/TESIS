@@ -1,0 +1,189 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Usuarios{% endblock %}
+{% block titulo_pagina %}Usuarios{% endblock %}
+
+{% block estilos %}
+<style>
+  .usuarios { max-width: 1200px; margin: 0 auto; }
+
+  .acciones-superiores { display: flex; justify-content: flex-end; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+
+  /* Resumen */
+  .resumen { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-bottom: 20px; }
+  .resumen .tarjeta { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; padding: 18px 20px; }
+  .resumen .numero { font-size: 1.7rem; font-weight: 700; color: #184c32; line-height: 1.1; }
+  .resumen .etiqueta { color: #5b6661; font-size: .9rem; margin-top: 4px; }
+
+  /* Filtros */
+  .filtros { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; padding: 18px 20px; margin-bottom: 20px;
+             display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+  .filtros .campo { display: flex; flex-direction: column; gap: 6px; }
+  .filtros .campo.buscar { flex: 1 1 280px; }
+  .filtros label { font-size: .85rem; font-weight: 600; color: #3d4843; }
+  .filtros input, .filtros select { height: 42px; padding: 0 12px; border: 1px solid #cfd8d3; border-radius: 10px;
+                                    font: inherit; color: #1f2a25; background: #fff; }
+  .filtros input:focus, .filtros select:focus { outline: none; border-color: #1f5f3e; box-shadow: 0 0 0 3px rgba(31,95,62,.15); }
+  .boton { height: 42px; padding: 0 20px; border-radius: 10px; border: 1px solid #1f5f3e; font: inherit; font-weight: 600;
+           cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+  .boton.primario { background: #1f5f3e; color: #fff; }
+  .boton.primario:hover { background: #184c32; }
+  .boton.secundario { background: #fff; color: #1f5f3e; }
+  .boton.secundario:hover { background: #f3f6f4; }
+
+  /* Tabla */
+  .tabla-caja { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; overflow: hidden; }
+  .tabla-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 820px; }
+  th { text-align: left; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #5b6661;
+       background: #f7f9f8; padding: 12px 18px; border-bottom: 1px solid #e3e8e5; }
+  td { padding: 14px 18px; border-bottom: 1px solid #eef2f0; color: #1f2a25; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #fafcfb; }
+
+  .usuario { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: #1f5f3e; color: #fff; font-weight: 700;
+            font-size: .85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .usuario .nombre { font-weight: 600; }
+  .usuario .cedula { font-size: .85rem; color: #5b6661; }
+
+  .insignia { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; white-space: nowrap; }
+  .insignia.perfil { border: 1px solid #1f5f3e; color: #1f5f3e; background: #fff; }
+  .insignia.activo { background: #1f5f3e; color: #fff; }
+  .insignia.inactivo { background: #6b7570; color: #fff; }
+  .tenue { color: #5b6661; font-size: .9rem; }
+
+  .enlace-ver { display: inline-block; padding: 6px 14px; border: 1px solid #1f5f3e; border-radius: 8px;
+                color: #1f5f3e; font-weight: 600; font-size: .88rem; text-decoration: none; }
+  .enlace-ver:hover { background: #1f5f3e; color: #fff; }
+
+  .vacio { padding: 40px 20px; text-align: center; color: #5b6661; }
+
+  /* Paginación */
+  .paginacion { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+                padding: 14px 18px; border-top: 1px solid #e3e8e5; }
+  .paginacion .enlaces { display: flex; gap: 8px; }
+  .paginacion a, .paginacion span.actual { padding: 7px 14px; border-radius: 8px; border: 1px solid #cfd8d3;
+                                           text-decoration: none; color: #1f5f3e; font-weight: 600; font-size: .9rem; }
+  .paginacion span.actual { background: #1f5f3e; border-color: #1f5f3e; color: #fff; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="usuarios">
+
+  <div class="acciones-superiores">
+    <a href="{% url 'usuarios:nuevo' %}" class="boton primario">+ Nuevo usuario</a>
+  </div>
+
+  <!-- Resumen -->
+  <div class="resumen">
+    <div class="tarjeta"><div class="numero">{{ resumen.total }}</div><div class="etiqueta">Usuarios en total</div></div>
+    <div class="tarjeta"><div class="numero">{{ resumen.estudiantes }}</div><div class="etiqueta">Estudiantes</div></div>
+    <div class="tarjeta"><div class="numero">{{ resumen.personal }}</div><div class="etiqueta">Personal de atención</div></div>
+    <div class="tarjeta"><div class="numero">{{ resumen.docentes }}</div><div class="etiqueta">Docentes</div></div>
+    <div class="tarjeta"><div class="numero">{{ resumen.inactivos }}</div><div class="etiqueta">Cuentas desactivadas</div></div>
+  </div>
+
+  <!-- Filtros -->
+  <form method="get" class="filtros">
+    <div class="campo buscar">
+      <label for="q">Buscar</label>
+      <input type="text" id="q" name="q" value="{{ q }}" placeholder="Cédula, nombres, apellidos o correo">
+    </div>
+    <div class="campo">
+      <label for="perfil">Perfil</label>
+      <select id="perfil" name="perfil">
+        <option value="">Todos</option>
+        {% for clave, etiqueta in opciones_perfil %}
+          <option value="{{ clave }}" {% if clave == perfil_actual %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="estado">Estado</label>
+      <select id="estado" name="estado">
+        <option value="">Todos</option>
+        <option value="activos" {% if estado_actual == "activos" %}selected{% endif %}>Activos</option>
+        <option value="inactivos" {% if estado_actual == "inactivos" %}selected{% endif %}>Desactivados</option>
+      </select>
+    </div>
+    <button type="submit" class="boton primario">Filtrar</button>
+    {% if hay_filtros %}
+      <a href="{% url 'usuarios:lista' %}" class="boton secundario">Limpiar</a>
+    {% endif %}
+  </form>
+
+  <!-- Tabla -->
+  <div class="tabla-caja">
+    <div class="tabla-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Usuario</th>
+            <th>Correo</th>
+            <th>Perfil</th>
+            <th>Estado</th>
+            <th>Último acceso</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in usuarios %}
+            <tr>
+              <td>
+                <div class="usuario">
+                  <div class="avatar">
+                    {% if u.persona %}{{ u.persona.nombres|slice:":1"|upper }}{{ u.persona.apellidos|slice:":1"|upper }}{% else %}AD{% endif %}
+                  </div>
+                  <div>
+                    <div class="nombre">
+                      {% if u.persona %}{{ u.persona.nombre_completo }}{% else %}Cuenta técnica{% endif %}
+                    </div>
+                    <div class="cedula">{{ u.cedula }}</div>
+                  </div>
+                </div>
+              </td>
+              <td class="tenue">{{ u.email }}</td>
+              <td><span class="insignia perfil">{{ u.perfil }}</span></td>
+              <td>
+                {% if u.is_active %}
+                  <span class="insignia activo">Activo</span>
+                {% else %}
+                  <span class="insignia inactivo">Desactivado</span>
+                {% endif %}
+              </td>
+              <td class="tenue">{{ u.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</td>
+              <td><a href="{% url 'usuarios:detalle' u.pk %}" class="enlace-ver">Ver</a></td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="vacio">
+                {% if hay_filtros %}No hay usuarios que coincidan con la búsqueda.{% else %}Aún no hay usuarios registrados.{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+      <div class="paginacion">
+        <span class="tenue">
+          Mostrando {{ page_obj.start_index }}–{{ page_obj.end_index }} de {{ paginator.count }}
+        </span>
+        <div class="enlaces">
+          {% if page_obj.has_previous %}
+            <a href="?{% if parametros %}{{ parametros }}&{% endif %}page={{ page_obj.previous_page_number }}">Anterior</a>
+          {% endif %}
+          <span class="actual">{{ page_obj.number }} / {{ paginator.num_pages }}</span>
+          {% if page_obj.has_next %}
+            <a href="?{% if parametros %}{{ parametros }}&{% endif %}page={{ page_obj.next_page_number }}">Siguiente</a>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

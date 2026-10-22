@@ -1,0 +1,69 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Nuevo docente{% endblock %}
+{% block titulo_pagina %}Usuarios{% endblock %}
+
+{% block estilos %}
+  {% include "usuarios/_estilos_formulario.html" %}
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Nuevo docente</h2>
+    <a href="{% url 'usuarios:nuevo' %}" class="volver">← Elegir otro tipo de usuario</a>
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="alerta-error">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="nota">
+    El docente solo podrá ver las adaptaciones NEE que el área de Psicología le asigne.
+    No tendrá acceso a sesiones, diagnósticos ni historias clínicas.
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="seccion-form">
+      <h3>Datos personales</h3>
+      <p class="descripcion">Información básica del docente.</p>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.nombres %}
+        {% include "usuarios/_campo.html" with campo=form.apellidos %}
+        {% include "usuarios/_campo.html" with campo=form.fecha_nacimiento %}
+        {% include "usuarios/_campo.html" with campo=form.sexo %}
+        {% include "usuarios/_campo.html" with campo=form.telefono %}
+      </div>
+    </div>
+
+    <div class="seccion-form">
+      <h3>Cuenta de acceso</h3>
+      <p class="descripcion">Con la cédula iniciará sesión. La contraseña temporal se genera automáticamente.</p>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.cedula %}
+        {% include "usuarios/_campo.html" with campo=form.correo %}
+      </div>
+    </div>
+
+    <div class="seccion-form">
+      <h3>Datos académicos</h3>
+      <p class="descripcion">Facultad a la que pertenece el docente.</p>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.facultad %}
+        {% include "usuarios/_campo.html" with campo=form.titulo_academico %}
+      </div>
+    </div>
+
+    <div class="acciones-form">
+      <a href="{% url 'usuarios:lista' %}" class="boton secundario">Cancelar</a>
+      <button type="submit" class="boton primario">Crear docente</button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

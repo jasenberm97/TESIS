@@ -1,0 +1,90 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Editar usuario{% endblock %}
+{% block titulo_pagina %}Usuarios{% endblock %}
+
+{% block estilos %}
+  {% include "usuarios/_estilos_formulario.html" %}
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Editar: {{ u.persona.nombre_completo }}</h2>
+    <a href="{% url 'usuarios:detalle' u.pk %}" class="volver">← Volver a la ficha</a>
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="alerta-error">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="nota">
+    Perfil: <strong>{{ u.perfil }}</strong>. El perfil no se puede cambiar; si la persona necesita otro perfil,
+    se debe crear una cuenta nueva.
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="seccion-form">
+      <h3>Datos personales</h3>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.nombres %}
+        {% include "usuarios/_campo.html" with campo=form.apellidos %}
+        {% include "usuarios/_campo.html" with campo=form.fecha_nacimiento %}
+        {% include "usuarios/_campo.html" with campo=form.sexo %}
+        {% include "usuarios/_campo.html" with campo=form.telefono %}
+      </div>
+    </div>
+
+    <div class="seccion-form">
+      <h3>Cuenta de acceso</h3>
+      <p class="descripcion">La cédula es la identidad de la persona y su usuario de acceso; no se puede modificar.</p>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.cedula %}
+        {% include "usuarios/_campo.html" with campo=form.correo %}
+      </div>
+    </div>
+
+    {% if u.rol == "PERSONAL" %}
+      <div class="seccion-form">
+        <h3>Datos profesionales</h3>
+        <p class="descripcion">Si cambia el área, también cambian sus permisos de acceso.</p>
+        <div class="rejilla">
+          {% include "usuarios/_campo.html" with campo=form.area %}
+          {% include "usuarios/_campo.html" with campo=form.cargo %}
+          {% include "usuarios/_campo.html" with campo=form.registro_profesional %}
+          {% include "usuarios/_campo.html" with campo=form.fecha_ingreso %}
+          {% include "usuarios/_campo.html" with campo=form.fecha_salida %}
+        </div>
+      </div>
+    {% elif u.rol == "DOCENTE" %}
+      <div class="seccion-form">
+        <h3>Datos académicos</h3>
+        <div class="rejilla">
+          {% include "usuarios/_campo.html" with campo=form.facultad %}
+          {% include "usuarios/_campo.html" with campo=form.titulo_academico %}
+        </div>
+      </div>
+    {% elif u.rol == "ESTUDIANTE" %}
+      <div class="seccion-form">
+        <h3>Datos académicos</h3>
+        <div class="rejilla">
+          {% include "usuarios/_campo.html" with campo=form.carrera %}
+          {% include "usuarios/_campo.html" with campo=form.semestre %}
+          {% include "usuarios/_campo.html" with campo=form.estado_academico %}
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="acciones-form">
+      <a href="{% url 'usuarios:detalle' u.pk %}" class="boton secundario">Cancelar</a>
+      <button type="submit" class="boton primario">Guardar cambios</button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

@@ -1,0 +1,129 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Mi perfil{% endblock %}
+{% block titulo_pagina %}Mi perfil{% endblock %}
+
+{% block estilos %}
+<style>
+  .cabecera-perfil { display: flex; align-items: center; gap: 18px; }
+  .avatar-grande { width: 64px; height: 64px; border-radius: 50%; background: var(--lateral); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 1.3rem; flex-shrink: 0; }
+  .cabecera-perfil h2 { margin: 0 0 4px; font-size: 1.35rem; color: #1f2a24; }
+  .cabecera-perfil p { margin: 0; color: var(--texto-suave); font-size: .9rem; }
+  .chip { display: inline-block; background: #f1f8f4; border: 1px solid #d3e6db; color: #2d6b49; padding: 2px 10px; border-radius: 999px; font-size: .78rem; font-weight: 600; margin-left: 6px; }
+
+  .rejilla { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: start; }
+  .rejilla .tarjeta { margin-bottom: 0; }
+  .tarjeta h3 { margin: 0 0 4px; font-size: 1.02rem; }
+  .tarjeta .ayuda { margin: 0 0 16px; font-size: .84rem; color: var(--texto-suave); }
+
+  .lista { margin: 0; }
+  .lista div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-bottom: 1px solid #eef2ef; font-size: .92rem; }
+  .lista div:last-child { border-bottom: 0; }
+  .lista dt { color: var(--texto-suave); }
+  .lista dd { margin: 0; font-weight: 600; text-align: right; }
+
+  .campo { margin-bottom: 14px; }
+  .campo label { display: block; font-size: .86rem; font-weight: 600; margin-bottom: 6px; color: #33413a; }
+  .campo input { width: 100%; padding: 10px 12px; border: 1px solid #c9d6ce; border-radius: 9px; font-size: .95rem; background: #fbfdfc; }
+  .campo input:focus { outline: none; border-color: var(--verde-medio); box-shadow: 0 0 0 3px rgba(63,143,99,.15); background: #fff; }
+  .error { color: #b42318; font-size: .82rem; margin: 5px 0 0; }
+  .btn-guardar { padding: 10px 20px; background: var(--verde); color: #fff; border: 0; border-radius: 9px; font-weight: 600; font-size: .92rem; cursor: pointer; }
+  .btn-guardar:hover { background: #164a2e; }
+
+  .seguridad { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .btn-deshabilitado { padding: 9px 14px; border-radius: 9px; background: #e9eeeb; color: #8a978f; font-weight: 600; font-size: .85rem; white-space: nowrap; }
+
+  .aviso-correccion { margin-top: 16px; padding: 12px 14px; background: #fff8e6; border: 1px solid #f3dfa6; border-radius: 10px; font-size: .84rem; color: #6b5310; }
+  .consentimiento-info { font-size: .82rem; color: var(--texto-suave); margin: 12px 0 0; }
+  .btn-secundario { padding: 9px 14px; border-radius: 9px; border: 1px solid #c9d6ce; color: var(--verde); font-weight: 600; font-size: .85rem; text-decoration: none; white-space: nowrap; }
+  .btn-secundario:hover { background: #f1f8f4; border-color: var(--verde-medio); }
+  @media (max-width: 800px) {
+    .rejilla { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block contenido %}
+{% with persona=estudiante.persona %}
+
+  <!-- Cabecera -->
+  <section class="tarjeta cabecera-perfil">
+    <div class="avatar-grande">{{ persona.nombres|first|upper }}{{ persona.apellidos|first|upper }}</div>
+    <div>
+      <h2>{{ persona.nombre_completo }}</h2>
+      <p>{{ estudiante.codigo_estudiantil }} <span class="chip">{{ estudiante.get_estado_academico_display }}</span></p>
+    </div>
+  </section>
+
+  <div class="rejilla">
+    <!-- Columna izquierda: datos de solo lectura -->
+    <div>
+      <section class="tarjeta" style="margin-bottom: 22px;">
+        <h3>Datos personales</h3>
+        <p class="ayuda">Información de identificación.</p>
+        <dl class="lista">
+          <div><dt>Cédula</dt><dd>{{ estudiante.persona.usuario.cedula }}</dd></div>
+          <div><dt>Nombres</dt><dd>{{ persona.nombres }}</dd></div>
+          <div><dt>Apellidos</dt><dd>{{ persona.apellidos }}</dd></div>
+          <div><dt>Fecha de nacimiento</dt><dd>{{ persona.fecha_nacimiento|date:"j \d\e F \d\e Y" }}</dd></div>
+          <div><dt>Edad</dt><dd>{{ persona.edad }} años</dd></div>
+          <div><dt>Sexo</dt><dd>{{ persona.get_sexo_display }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="tarjeta">
+        <h3>Datos académicos</h3>
+        <p class="ayuda">Información de tu carrera.</p>
+        <dl class="lista">
+          <div><dt>Facultad</dt><dd>{{ estudiante.carrera.facultad }}</dd></div>
+          <div><dt>Carrera</dt><dd>{{ estudiante.carrera }}</dd></div>
+          <div><dt>Semestre</dt><dd>{{ estudiante.semestre }}.º</dd></div>
+        </dl>
+        <div class="aviso-correccion">
+          ¿Hay un error en estos datos? Acércate a Bienestar Universitario para corregirlo.
+        </div>
+      </section>
+    </div>
+
+    <!-- Columna derecha: lo que sí puede editar -->
+    <div>
+      <section class="tarjeta" style="margin-bottom: 22px;">
+        <h3>Datos de contacto</h3>
+        <p class="ayuda">Mantén actualizados tu correo y teléfono para recibir avisos de tus citas.</p>
+
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% for e in form.non_field_errors %}<p class="error">{{ e }}</p>{% endfor %}
+
+          <div class="campo">
+            {{ form.correo.label_tag }}{{ form.correo }}
+            {% for e in form.correo.errors %}<p class="error">{{ e }}</p>{% endfor %}
+          </div>
+          <div class="campo">
+            {{ form.telefono.label_tag }}{{ form.telefono }}
+            {% for e in form.telefono.errors %}<p class="error">{{ e }}</p>{% endfor %}
+          </div>
+
+          <button type="submit" class="btn-guardar">Guardar cambios</button>
+        </form>
+      </section>
+
+      <section class="tarjeta">
+        <div class="seguridad">
+          <div>
+            <h3>Contraseña</h3>
+            <p class="ayuda" style="margin: 0;">Cámbiala periódicamente para proteger tu cuenta.</p>
+          </div>
+            <a class="btn-secundario" href="{% url 'principal:cambiar_contrasena' %}">Cambiar</a>
+        </div>
+        {% if estudiante.fecha_consentimiento %}
+          <p class="consentimiento-info">
+            Aceptaste el aviso de privacidad el {{ estudiante.fecha_consentimiento|date:"j \d\e F \d\e Y, H:i" }}.
+          </p>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+
+{% endwith %}
+{% endblock %}

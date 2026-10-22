@@ -1,0 +1,244 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Inicio{% endblock %} | Bienestar Universitario UAE</title>
+  <style>
+    :root {
+      --alto-barra: 86px;
+      --lateral: #1f5f3e;
+      --lateral-2: #184c32;
+      --acento: #9fdcb8;
+      --verde: #1d5c3a;
+      --verde-medio: #3f8f63;
+      --borde: #e2e9e5;
+      --fondo: #f4f7f5;
+      --texto-suave: #5b6b62;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, "Segoe UI", Arial, sans-serif; background: var(--fondo); margin: 0; color: #1f2a24; }
+
+    /* ================= Barra lateral ================= */
+    .lateral {
+      position: fixed; top: 0; bottom: 0; left: 0; width: 250px; z-index: 30;
+      background: linear-gradient(180deg, var(--lateral) 0%, var(--lateral-2) 100%);
+      display: flex; flex-direction: column; overflow-y: auto; transition: transform .2s ease;
+    }
+    .lateral .marca {
+      height: var(--alto-barra); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      padding: 0 18px; background: #fff; border-bottom: 1px solid var(--borde); border-right: 1px solid var(--borde);
+    }
+    .lateral .marca img { max-width: 100%; max-height: 64px; width: auto; height: auto; display: block; }
+
+    .menu-lateral { padding: 18px 14px; display: flex; flex-direction: column; gap: 3px; }
+    .menu-lateral .seccion { font-size: .7rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.5); padding: 16px 12px 6px; }
+    .menu-lateral .item {
+      display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px;
+      color: rgba(255,255,255,.92); text-decoration: none; font-size: .94rem; font-weight: 500;
+      transition: background .15s, color .15s;
+    }
+    .menu-lateral a.item:hover { background: rgba(255,255,255,.10); color: #fff; }
+    .menu-lateral .item svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .menu-lateral .item.activo { background: rgba(255,255,255,.16); color: #fff; font-weight: 600; box-shadow: inset 3px 0 0 var(--acento); }
+    .menu-lateral .item.pronto { color: rgba(255,255,255,.6); cursor: default; }
+    .menu-lateral .item .pronto-tag { margin-left: auto; font-size: .62rem; font-weight: 600; letter-spacing: .03em; background: rgba(255,255,255,.14); color: rgba(255,255,255,.8); padding: 2px 8px; border-radius: 999px; }
+
+    /* Usuario abajo en la barra */
+    .cuenta { margin-top: auto; padding: 14px; border-top: 1px solid rgba(255,255,255,.12); display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 38px; height: 38px; border-radius: 50%; background: #fff; color: var(--verde); display: grid; place-items: center; font-weight: 700; font-size: .85rem; flex-shrink: 0; }
+    .cuenta .datos-cuenta { min-width: 0; flex: 1; line-height: 1.25; }
+    .cuenta .datos-cuenta strong { display: block; color: #fff; font-size: .88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cuenta .datos-cuenta span { color: var(--acento); font-size: .75rem; font-weight: 500; }
+    .btn-salir { background: rgba(255,255,255,.10); border: 0; color: #fff; width: 36px; height: 36px; border-radius: 9px; cursor: pointer; display: grid; place-items: center; transition: background .15s; }
+    .btn-salir:hover { background: rgba(255,255,255,.22); }
+    .btn-salir svg { width: 18px; height: 18px; }
+
+    /* ================= Columna principal ================= */
+    .columna { margin-left: 250px; min-height: 100vh; display: flex; flex-direction: column; min-width: 0; }
+    .superior {
+      position: sticky; top: 0; z-index: 20; height: var(--alto-barra);
+      background: #fff; border-bottom: 1px solid var(--borde);
+      padding: 0 32px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    }
+    .superior .izq { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .superior h1 { margin: 0; font-size: 1.3rem; font-weight: 700; color: #1f2a24; }
+    .superior .fecha { font-size: .88rem; color: var(--texto-suave); }
+    .superior .fecha::first-letter { text-transform: uppercase; }
+    .btn-menu { display: none; background: #fff; border: 1px solid var(--borde); border-radius: 8px; width: 38px; height: 38px; cursor: pointer; place-items: center; }
+    .btn-menu svg { width: 20px; height: 20px; }
+
+    main { flex: 1; width: 100%; max-width: 1040px; margin: 0 auto; padding: 32px; }
+
+    footer {
+      border-top: 1px solid var(--borde); background: #fff; padding: 14px 32px;
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; font-size: .8rem; color: #6b7a72;
+    }
+    footer a { color: var(--verde); text-decoration: none; font-weight: 600; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ================= Elementos comunes ================= */
+    .mensaje { padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: .92rem; }
+    .mensaje.success { background: #f1f8f4; border: 1px solid #cfe3d7; color: var(--verde); }
+    .mensaje.error { background: #fdecea; border: 1px solid #f6c9c4; color: #b42318; }
+    .tarjeta { background: #fff; border: 1px solid var(--borde); border-radius: 14px; padding: 26px 28px; margin-bottom: 22px; }
+    .volver { display: inline-flex; align-items: center; gap: 6px; color: var(--texto-suave); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+    .volver:hover { color: var(--verde); }
+
+    /* ================= Celular ================= */
+    .fondo-oscuro { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 25; }
+    @media (max-width: 900px) {
+      :root { --alto-barra: 64px; }
+      .lateral { transform: translateX(-100%); box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+      .lateral.abierta { transform: translateX(0); }
+      .lateral .marca img { max-height: 48px; }
+      .fondo-oscuro.visible { display: block; }
+      .columna { margin-left: 0; }
+      .btn-menu { display: grid; }
+      .superior { padding: 0 16px; }
+      .superior .fecha { display: none; }
+      main { padding: 20px 16px; }
+      footer { padding: 14px 16px; }
+      .tarjeta { padding: 20px; }
+    }
+  </style>
+  {% block estilos %}{% endblock %}
+</head>
+<body>
+{% with vista=request.resolver_match.view_name %}
+
+<!-- ================= Barra lateral ================= -->
+<aside class="lateral" id="lateral">
+  <a class="marca" href="{% url 'principal:panel' %}">
+    <img src="{% static 'principal/img/logo_uae.png' %}" alt="Universidad Agraria del Ecuador">
+  </a>
+
+  <nav class="menu-lateral">
+    <a class="item {% if vista == 'principal:panel' %}activo{% endif %}" href="{% url 'principal:panel' %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>
+      Inicio
+    </a>
+
+    {% if user.rol == "ESTUDIANTE" %}
+      <div class="seccion">Citas</div>
+      <span class="item pronto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v5M9.5 16.5h5"/></svg>
+        Agendar cita <span class="pronto-tag">Pronto</span>
+      </span>
+      <span class="item pronto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h8M8 18h5"/></svg>
+        Mis citas <span class="pronto-tag">Pronto</span>
+      </span>
+
+      <div class="seccion">Mi cuenta</div>
+      <a class="item {% if vista == 'estudiantes:mi_perfil' or vista == 'principal:cambiar_contrasena' %}activo{% endif %}" href="{% url 'estudiantes:mi_perfil' %}">        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        Mi perfil
+      </a>
+      <a class="item" href="{% url 'estudiantes:privacidad' %}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
+        Aviso de privacidad
+      </a>
+
+    {% elif user.rol == "PERSONAL" %}
+      <div class="seccion">Atención</div>
+      <span class="item pronto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Mi agenda <span class="pronto-tag">Pronto</span>
+      </span>
+      <span class="item pronto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M22 20c0-3-2-4.8-5-5.3"/></svg>
+        Pacientes <span class="pronto-tag">Pronto</span>
+      </span>
+
+    {% elif user.rol == "DOCENTE" %}
+      <div class="seccion">Académico</div>
+      <span class="item pronto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg>
+        Adaptaciones NEE <span class="pronto-tag">Pronto</span>
+      </span>
+
+    {% else %}
+      <div class="seccion">Administración</div>
+      <a href="{% url 'usuarios:lista' %}"
+         class="item {% if request.resolver_match.app_name == 'usuarios' %}activo{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M22 20c0-3-2-4.8-5-5.3"/></svg>
+        Usuarios
+      </a>
+      <span class="item pronto">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        Horarios <span class="pronto-tag">Pronto</span>
+      </span>
+    {% endif %}
+
+    {% if user.is_staff %}
+      <div class="seccion">Sistema</div>
+      <a class="item" href="{% url 'admin:index' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></svg>
+        Administración
+      </a>
+    {% endif %}
+  </nav>
+
+  <!-- Usuario y cerrar sesión -->
+  <div class="cuenta">
+    <div class="avatar">
+      {% if user.persona %}{{ user.persona.nombres|first|upper }}{{ user.persona.apellidos|first|upper }}{% else %}AD{% endif %}
+    </div>
+    <div class="datos-cuenta">
+      <strong>{% firstof user.persona.nombre_corto "Administrador" %}</strong>
+      <span>{{ user.perfil }}</span>
+    </div>
+    <form method="post" action="{% url 'principal:logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="btn-salir" title="Cerrar sesión" aria-label="Cerrar sesión">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4"/><path d="M10 17l-5-5 5-5M5 12h11"/></svg>
+      </button>
+    </form>
+  </div>
+</aside>
+<div class="fondo-oscuro" id="fondo-oscuro"></div>
+
+<!-- ================= Columna principal ================= -->
+<div class="columna">
+  <header class="superior">
+    <div class="izq">
+      <button type="button" class="btn-menu" id="btn-menu" aria-label="Abrir menú">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <h1>{% block titulo_pagina %}Inicio{% endblock %}</h1>
+    </div>
+    <span class="fecha">{% now "l, j \d\e F \d\e Y" %}</span>
+  </header>
+
+  <main>
+    {% for m in messages %}
+      <div class="mensaje {{ m.tags }}">{{ m }}</div>
+    {% endfor %}
+
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <footer>
+    <span>© {% now "Y" %} Universidad Agraria del Ecuador · Bienestar Universitario</span>
+    <a href="{% url 'estudiantes:privacidad' %}" target="_blank" rel="noopener">Aviso de privacidad</a>
+  </footer>
+</div>
+
+{% endwith %}
+
+<script>
+  const lateral = document.getElementById("lateral");
+  const fondo = document.getElementById("fondo-oscuro");
+  document.getElementById("btn-menu").addEventListener("click", () => {
+    lateral.classList.add("abierta");
+    fondo.classList.add("visible");
+  });
+  fondo.addEventListener("click", () => {
+    lateral.classList.remove("abierta");
+    fondo.classList.remove("visible");
+  });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

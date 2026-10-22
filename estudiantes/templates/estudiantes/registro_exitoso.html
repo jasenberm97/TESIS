@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registro exitoso | Bienestar Universitario UAE</title>
+  <style>
+    body { font-family: system-ui, "Segoe UI", Arial, sans-serif; background: #f3f6f4; margin: 0; color: #1f2a24; }
+    .tarjeta { max-width: 560px; margin: 48px auto; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,.08); text-align: center; }
+    .icono { width: 64px; height: 64px; border-radius: 50%; background: #e3f1e8; color: #1d5c3a; font-size: 34px; line-height: 64px; margin: 0 auto 12px; }
+    h1 { margin: 0 0 6px; font-size: 1.5rem; color: #1d5c3a; }
+    .sub { margin: 0 0 24px; color: #5b6b62; }
+    .codigo { display: inline-block; background: #f3f6f4; border: 2px dashed #1d5c3a; border-radius: 10px; padding: 12px 20px; font-size: 1.4rem; font-weight: 700; letter-spacing: 1px; color: #1d5c3a; margin-bottom: 24px; }
+    table { width: 100%; border-collapse: collapse; text-align: left; margin-bottom: 24px; }
+    th, td { padding: 8px 6px; border-bottom: 1px solid #e6ece8; font-size: .95rem; }
+    th { color: #5b6b62; font-weight: 600; width: 40%; }
+    .nota { font-size: .85rem; color: #5b6b62; }
+    .btn-login { display: block; margin-top: 18px; padding: 12px; background: #1d5c3a; color: #fff; border-radius: 8px; text-decoration: none; font-weight: 600; text-align: center; }
+    .btn-login:hover { background: #164a2e; }
+
+        /* Recuadro destacado de inicio de sesión */
+    .acceso { background: #f1f8f4; color: #1f2a24; border: 1px solid #d3e6db; border-left: 4px solid #3f8f63; border-radius: 10px; padding: 14px 16px; text-align: left; }
+    .acceso h2 { margin: 0 0 10px; font-size: 1rem; color: #2d6b49; display: flex; align-items: center; gap: 6px; }
+    .acceso .dato { display: flex; justify-content: space-between; gap: 12px; background: #fff; border: 1px solid #e1ece6; border-radius: 6px; padding: 7px 12px; margin-bottom: 6px; font-size: .9rem; }
+    .acceso .dato span:first-child { color: #5b6b62; }
+    .acceso .dato strong { font-size: .95rem; color: #1f2a24; }
+    .acceso p { margin: 8px 0 0; font-size: .8rem; color: #5b6b62; }
+    @media (max-width: 600px) { .tarjeta { margin: 0; border-radius: 0; } }
+  </style>
+</head>
+<body>
+<main class="tarjeta">
+  <div class="icono">✓</div>
+  <h1>¡Registro exitoso!</h1>
+  <p class="sub">Bienvenido(a), {{ estudiante.persona.nombres }}. Tu cuenta fue creada correctamente.</p>
+
+  <p class="nota">Tu código estudiantil es:</p>
+  <div class="codigo">{{ estudiante.codigo_estudiantil }}</div>
+
+  <table>
+    <tr><th>Nombre</th><td>{{ estudiante.persona.nombre_completo }}</td></tr>
+    <tr><th>Cédula</th><td>{{ estudiante.persona.usuario.cedula }}</td></tr>
+    <tr><th>Correo</th><td>{{ estudiante.persona.usuario.email }}</td></tr>
+    <tr><th>Facultad</th><td>{{ estudiante.carrera.facultad }}</td></tr>
+    <tr><th>Carrera</th><td>{{ estudiante.carrera }}</td></tr>
+    <tr><th>Semestre</th><td>{{ estudiante.semestre }}.º</td></tr>
+  </table>
+
+  <div class="acceso">
+    <h2>🔑 ¿Cómo iniciar sesión?</h2>
+    <div class="dato"><span>Usuario</span><strong>{{ estudiante.persona.usuario.cedula }}</strong></div>
+    <div class="dato"><span>Contraseña</span><strong>La que acabas de crear</strong></div>
+    <p>Recuerda: para entrar al sistema siempre usarás tu <strong>cédula</strong>, no tu correo ni tu código estudiantil.</p>
+     <a class="btn-login" href="{% url 'principal:login' %}">Iniciar sesión</a>
+  </div>
+</main>
+</body>
+</html>

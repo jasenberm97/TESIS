@@ -1,0 +1,66 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Nuevo personal{% endblock %}
+{% block titulo_pagina %}Usuarios{% endblock %}
+
+{% block estilos %}
+  {% include "usuarios/_estilos_formulario.html" %}
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Nuevo personal de atención</h2>
+    <a href="{% url 'usuarios:nuevo' %}" class="volver">← Elegir otro tipo de usuario</a>
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="alerta-error">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="seccion-form">
+      <h3>Datos personales</h3>
+      <p class="descripcion">Información básica del profesional.</p>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.nombres %}
+        {% include "usuarios/_campo.html" with campo=form.apellidos %}
+        {% include "usuarios/_campo.html" with campo=form.fecha_nacimiento %}
+        {% include "usuarios/_campo.html" with campo=form.sexo %}
+        {% include "usuarios/_campo.html" with campo=form.telefono %}
+      </div>
+    </div>
+
+    <div class="seccion-form">
+      <h3>Cuenta de acceso</h3>
+      <p class="descripcion">Con la cédula iniciará sesión. La contraseña temporal se genera automáticamente.</p>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.cedula %}
+        {% include "usuarios/_campo.html" with campo=form.correo %}
+      </div>
+    </div>
+
+    <div class="seccion-form">
+      <h3>Datos profesionales</h3>
+      <p class="descripcion">El área define a qué módulo clínico tendrá acceso.</p>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.area %}
+        {% include "usuarios/_campo.html" with campo=form.cargo %}
+        {% include "usuarios/_campo.html" with campo=form.registro_profesional %}
+        {% include "usuarios/_campo.html" with campo=form.fecha_ingreso %}
+      </div>
+    </div>
+
+    <div class="acciones-form">
+      <a href="{% url 'usuarios:lista' %}" class="boton secundario">Cancelar</a>
+      <button type="submit" class="boton primario">Crear personal</button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

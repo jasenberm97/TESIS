@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Registro de estudiantes | Bienestar Universitario UAE</title>
+  <style>
+    body { font-family: system-ui, "Segoe UI", Arial, sans-serif; background: #f3f6f4; margin: 0; color: #1f2a24; }
+    .tarjeta { max-width: 720px; margin: 32px auto; background: #fff; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+    h1 { margin: 0 0 4px; font-size: 1.5rem; color: #1d5c3a; }
+    .sub { margin: 0 0 20px; color: #5b6b62; }
+    fieldset { border: 1px solid #dfe7e2; border-radius: 10px; padding: 16px; margin: 0 0 18px; }
+    legend { font-weight: 600; color: #1d5c3a; padding: 0 6px; }
+    .fila { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+    .campo { margin-bottom: 12px; }
+    label { display: block; font-size: .9rem; font-weight: 600; margin-bottom: 4px; }
+    input, select { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid #c5d1ca; border-radius: 8px; font-size: .95rem; background: #fff; }
+    .error { color: #b42318; font-size: .85rem; margin: 4px 0 0; }
+    .alerta { background: #fdecea; color: #b42318; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; }
+
+    /* Ojito para ver la contraseña */
+    .clave { position: relative; }
+    .clave input { padding-right: 44px; }
+    .ver-clave { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; padding: 6px; cursor: pointer; color: #5b6b62; display: flex; }
+    .ver-clave:hover { color: #1d5c3a; }
+    .ver-clave svg { width: 20px; height: 20px; }
+
+    /* Recuadro de consentimiento */
+    .consentimiento { background: #f3f8f5; border: 1px solid #cfe3d7; border-radius: 10px; padding: 16px; margin-bottom: 18px; }
+    .consentimiento h3 { margin: 0 0 6px; font-size: 1rem; color: #1d5c3a; }
+    .consentimiento p { margin: 0 0 10px; font-size: .9rem; color: #3d4a43; }
+    .consentimiento a { color: #1d5c3a; font-weight: 600; }
+    .acepto { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; }
+    .acepto input { width: auto; margin-top: 3px; transform: scale(1.2); }
+    .acepto label { font-weight: 600; margin: 0; }
+
+    .btn-principal { width: 100%; padding: 12px; background: #1d5c3a; color: #fff; border: 0; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+    .btn-principal:hover { background: #164a2e; }
+    .volver { display: inline-flex; align-items: center; gap: 6px; color: #5b6b62; text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
+    .volver:hover { color: #1d5c3a; }
+    @media (max-width: 600px) { .fila { grid-template-columns: 1fr; } .tarjeta { margin: 0; border-radius: 0; } }
+  </style>
+</head>
+<body>
+<main class="tarjeta">
+  <a class="volver" href="{% url 'principal:login' %}">← Volver al inicio de sesión</a>
+  <h1>Registro de estudiantes</h1>
+  <p class="sub">Bienestar Universitario — Universidad Agraria del Ecuador</p>
+
+  {% if form.non_field_errors %}
+    <div class="alerta">{% for e in form.non_field_errors %}{{ e }} {% endfor %}</div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <fieldset>
+      <legend>Datos de la cuenta</legend>
+      <div class="fila">
+        <div class="campo">{{ form.cedula.label_tag }}{{ form.cedula }}{% for e in form.cedula.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+        <div class="campo">{{ form.correo.label_tag }}{{ form.correo }}{% for e in form.correo.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+
+        <div class="campo">
+          {{ form.password1.label_tag }}
+          <div class="clave">
+            {{ form.password1 }}
+            <button type="button" class="ver-clave" data-objetivo="id_password1" aria-label="Mostrar contraseña"></button>
+          </div>
+          {% for e in form.password1.errors %}<p class="error">{{ e }}</p>{% endfor %}
+        </div>
+
+        <div class="campo">
+          {{ form.password2.label_tag }}
+          <div class="clave">
+            {{ form.password2 }}
+            <button type="button" class="ver-clave" data-objetivo="id_password2" aria-label="Mostrar contraseña"></button>
+          </div>
+          {% for e in form.password2.errors %}<p class="error">{{ e }}</p>{% endfor %}
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Datos personales</legend>
+      <div class="fila">
+        <div class="campo">{{ form.nombres.label_tag }}{{ form.nombres }}{% for e in form.nombres.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+        <div class="campo">{{ form.apellidos.label_tag }}{{ form.apellidos }}{% for e in form.apellidos.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+        <div class="campo">{{ form.fecha_nacimiento.label_tag }}{{ form.fecha_nacimiento }}{% for e in form.fecha_nacimiento.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+        <div class="campo">{{ form.sexo.label_tag }}{{ form.sexo }}{% for e in form.sexo.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+        <div class="campo">{{ form.telefono.label_tag }}{{ form.telefono }}{% for e in form.telefono.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Datos académicos</legend>
+      <div class="fila">
+        <div class="campo">{{ form.facultad.label_tag }}{{ form.facultad }}{% for e in form.facultad.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+        <div class="campo">
+          <label for="id_carrera">Carrera:</label>
+          <select name="carrera" id="id_carrera">
+            <option value="">Seleccione una carrera</option>
+            {% for c in form.fields.carrera.queryset %}
+              <option value="{{ c.pk }}" data-facultad="{{ c.facultad_id }}"
+                {% if form.carrera.value|stringformat:"s" == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>
+            {% endfor %}
+          </select>
+          {% for e in form.carrera.errors %}<p class="error">{{ e }}</p>{% endfor %}
+        </div>
+        <div class="campo">{{ form.semestre.label_tag }}{{ form.semestre }}{% for e in form.semestre.errors %}<p class="error">{{ e }}</p>{% endfor %}</div>
+      </div>
+    </fieldset>
+
+    <div class="consentimiento">
+      <h3>Tratamiento de datos personales</h3>
+      <p>
+        Bienestar Universitario registrará tus datos personales y de salud (atenciones de Medicina,
+        Odontología y Psicología). Son datos sensibles: solo los ve el profesional que te atiende y
+        nunca se comparten con docentes ni terceros.
+      </p>
+      <p>
+        <a href="{% url 'estudiantes:privacidad' %}" target="_blank" rel="noopener">
+          Leer el aviso de privacidad completo ↗
+        </a>
+      </p>
+      <div class="acepto">
+        {{ form.acepta_tratamiento_datos }}
+        <label for="{{ form.acepta_tratamiento_datos.id_for_label }}">{{ form.acepta_tratamiento_datos.label }}</label>
+      </div>
+      {% for e in form.acepta_tratamiento_datos.errors %}<p class="error">{{ e }}</p>{% endfor %}
+    </div>
+
+    <button type="submit" class="btn-principal">Registrarme</button>
+  </form>
+</main>
+
+<script>
+  // ---------- Filtrar carreras según la facultad ----------
+  const facultad = document.getElementById("id_facultad");
+  const carrera = document.getElementById("id_carrera");
+
+  function filtrarCarreras() {
+    const f = facultad.value;
+    for (const op of carrera.options) {
+      if (!op.value) continue;
+      const pertenece = op.dataset.facultad === f;
+      op.hidden = !pertenece;
+      op.disabled = !pertenece;
+      if (!pertenece && op.selected) carrera.value = "";
+    }
+  }
+  facultad.addEventListener("change", filtrarCarreras);
+  filtrarCarreras();
+
+  // ---------- Ojito para mostrar u ocultar la contraseña ----------
+  const OJO_ABIERTO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const OJO_CERRADO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+  document.querySelectorAll(".ver-clave").forEach((boton) => {
+    const campo = document.getElementById(boton.dataset.objetivo);
+    boton.innerHTML = OJO_ABIERTO;
+    boton.addEventListener("click", () => {
+      const oculto = campo.type === "password";
+      campo.type = oculto ? "text" : "password";
+      boton.innerHTML = oculto ? OJO_CERRADO : OJO_ABIERTO;
+      boton.setAttribute("aria-label", oculto ? "Ocultar contraseña" : "Mostrar contraseña");
+    });
+  });
+</script>
+</body>
+</html>

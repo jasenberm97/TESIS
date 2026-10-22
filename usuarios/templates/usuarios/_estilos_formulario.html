@@ -1,0 +1,37 @@
+<style>
+  .formulario { max-width: 960px; margin: 0 auto; }
+  .encabezado-form { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+  .encabezado-form h2 { margin: 0; color: #184c32; font-size: 1.35rem; }
+  .volver { color: #1f5f3e; text-decoration: none; font-weight: 600; }
+  .volver:hover { text-decoration: underline; }
+
+  .seccion-form { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; padding: 24px; margin-bottom: 20px; }
+  .seccion-form h3 { margin: 0 0 4px; color: #184c32; font-size: 1.05rem; }
+  .seccion-form .descripcion { margin: 0 0 18px; color: #5b6661; font-size: .9rem; }
+  .rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 20px; }
+  @media (max-width: 700px) { .rejilla { grid-template-columns: 1fr; } }
+
+  .campo { display: flex; flex-direction: column; gap: 6px; }
+  .campo label { font-size: .88rem; font-weight: 600; color: #3d4843; }
+  .campo .obligatorio { color: #a23b2c; }
+  .campo input, .campo select { height: 44px; padding: 0 12px; border: 1px solid #cfd8d3; border-radius: 10px;
+                                font: inherit; color: #1f2a25; background: #fff; width: 100%; box-sizing: border-box; }
+  .campo input:focus, .campo select:focus { outline: none; border-color: #1f5f3e; box-shadow: 0 0 0 3px rgba(31,95,62,.15); }
+  .campo input:disabled, .campo select:disabled { background: #f3f6f4; color: #5b6661; cursor: not-allowed; }
+  .campo .ayuda { color: #6b7570; font-size: .8rem; }
+  .campo .error { color: #a23b2c; font-size: .82rem; font-weight: 600; }
+  .campo.con-error input, .campo.con-error select { border-color: #a23b2c; }
+
+  .alerta-error { background: #fff; border: 1px solid #a23b2c; border-left: 5px solid #a23b2c; color: #7c2b20;
+                  border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; font-weight: 600; }
+  .nota { background: #fff; border: 1px solid #e3e8e5; border-left: 5px solid #1f5f3e; border-radius: 10px;
+          padding: 14px 18px; color: #3d4843; font-size: .92rem; margin-bottom: 20px; }
+
+  .acciones-form { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; }
+  .boton { height: 44px; padding: 0 24px; border-radius: 10px; border: 1px solid #1f5f3e; font: inherit; font-weight: 600;
+           cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; }
+  .boton.primario { background: #1f5f3e; color: #fff; }
+  .boton.primario:hover { background: #184c32; }
+  .boton.secundario { background: #fff; color: #1f5f3e; }
+  .boton.secundario:hover { background: #f3f6f4; }
+</style>
