@@ -82,6 +82,8 @@
     .mensaje { padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: .92rem; }
     .mensaje.success { background: #f1f8f4; border: 1px solid #cfe3d7; color: var(--verde); }
     .mensaje.error { background: #fdecea; border: 1px solid #f6c9c4; color: #b42318; }
+    .mensaje.warning { background: #fff8e6; border: 1px solid #ecd9a6; color: #7a5a00; }
+    .mensaje.info { background: #fff; border: 1px solid var(--borde); border-left: 5px solid var(--lateral); color: #3d4843; }
     .tarjeta { background: #fff; border: 1px solid var(--borde); border-radius: 14px; padding: 26px 28px; margin-bottom: 22px; }
     .volver { display: inline-flex; align-items: center; gap: 6px; color: var(--texto-suave); text-decoration: none; font-size: .9rem; margin-bottom: 14px; }
     .volver:hover { color: var(--verde); }
@@ -122,30 +124,34 @@
 
     {% if user.rol == "ESTUDIANTE" %}
       <div class="seccion">Citas</div>
-      <span class="item pronto">
+      <a href="{% url 'citas:agendar' %}"
+         class="item {% if vista|slice:':13' == 'citas:agendar' %}activo{% endif %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M12 14v5M9.5 16.5h5"/></svg>
-        Agendar cita <span class="pronto-tag">Pronto</span>
-      </span>
-      <span class="item pronto">
+        Agendar cita
+      </a>
+      <a href="{% url 'citas:mis_citas' %}"
+         class="item {% if vista|slice:':15' == 'citas:mis_citas' %}activo{% endif %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h8M8 18h5"/></svg>
-        Mis citas <span class="pronto-tag">Pronto</span>
-      </span>
+        Mis citas
+      </a>
 
       <div class="seccion">Mi cuenta</div>
-      <a class="item {% if vista == 'estudiantes:mi_perfil' or vista == 'principal:cambiar_contrasena' %}activo{% endif %}" href="{% url 'estudiantes:mi_perfil' %}">        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+      <a class="item {% if vista == 'estudiantes:mi_perfil' or vista == 'principal:cambiar_contrasena' %}activo{% endif %}" href="{% url 'estudiantes:mi_perfil' %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
         Mi perfil
       </a>
-      <a class="item" href="{% url 'estudiantes:privacidad' %}" target="_blank" rel="noopener">
+      <a class="item" href="{% url 'estudiantes:privacidad' %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>
         Aviso de privacidad
       </a>
 
     {% elif user.rol == "PERSONAL" %}
       <div class="seccion">Atención</div>
-      <span class="item pronto">
+      <a href="{% url 'citas:agenda' %}"
+         class="item {% if vista|slice:':12' == 'citas:agenda' %}activo{% endif %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-        Mi agenda <span class="pronto-tag">Pronto</span>
-      </span>
+        Mi agenda
+      </a>
       <span class="item pronto">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M22 20c0-3-2-4.8-5-5.3"/></svg>
         Pacientes <span class="pronto-tag">Pronto</span>
@@ -165,10 +171,16 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M22 20c0-3-2-4.8-5-5.3"/></svg>
         Usuarios
       </a>
-      <span class="item pronto">
+      <a href="{% url 'citas:horarios' %}"
+         class="item {% if vista|slice:':14' == 'citas:horarios' %}activo{% endif %}">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        Horarios <span class="pronto-tag">Pronto</span>
-      </span>
+        Horarios
+      </a>
+      <a href="{% url 'citas:gestion_citas' %}"
+         class="item {% if vista|slice:':14' == 'citas:gestion_' %}activo{% endif %}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg>
+        Citas
+      </a>
     {% endif %}
 
     {% if user.is_staff %}

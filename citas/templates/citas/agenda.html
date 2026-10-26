@@ -1,0 +1,190 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Mi agenda{% endblock %}
+{% block titulo_pagina %}Mi agenda{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+<style>
+  .contenedor { max-width: 1000px; }
+  .cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cabecera h2 { margin: 0; color: #184c32; font-size: 1.3rem; text-transform: capitalize; }
+  .cabecera .sub { color: #5b6661; margin-top: 2px; }
+  .navegacion { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .navegacion input[type=date] { height: 34px; padding: 0 10px; border: 1px solid #cfd8d3; border-radius: 10px; font: inherit; }
+
+  .semana { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 18px; }
+  .semana a { background: #fff; border: 1px solid #e3e8e5; border-radius: 12px; padding: 10px 6px; text-align: center;
+              text-decoration: none; color: #3d4843; }
+  .semana a:hover { border-color: #1f5f3e; }
+  .semana a.elegido { background: #1f5f3e; border-color: #1f5f3e; color: #fff; }
+  .semana .nombre { display: block; font-size: .78rem; font-weight: 600; text-transform: capitalize; }
+  .semana .numero { display: block; font-size: 1.2rem; font-weight: 700; }
+  .semana .citas { display: block; font-size: .75rem; }
+  .semana a.hoy:not(.elegido) { border-color: #1f5f3e; box-shadow: inset 0 3px 0 #1f5f3e; }
+
+  .aviso { border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; font-weight: 600; }
+  .aviso.gris { background: #6b7570; color: #fff; }
+  .aviso.rojo { background: #fff; border: 1px solid #a23b2c; color: #a23b2c; }
+
+  .pendientes { background: #fff; border: 1px solid #ecd9a6; border-left: 5px solid #b8860b; padding: 14px 18px; margin-bottom: 18px; }
+  .pendientes h3 { margin: 0 0 4px; color: #7a5a00; font-size: 1rem; }
+  .pendientes p { margin: 0 0 10px; color: #5b6661; font-size: .88rem; }
+  .pendientes .fila-p { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+                        padding: 8px 0; border-top: 1px solid #f3ead0; }
+
+  .resumen-dia { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .dato { border: 1px solid #e3e8e5; background: #fff; border-radius: 999px; padding: 5px 12px; font-size: .85rem; color: #3d4843; }
+  .dato strong { color: #184c32; }
+
+  .lista { display: flex; flex-direction: column; gap: 8px; }
+  .turno { display: grid; grid-template-columns: 110px 1fr; gap: 14px; align-items: start; }
+  .turno .hora { font-weight: 700; color: #1f2a25; font-variant-numeric: tabular-nums; padding-top: 14px; }
+  .turno .hora small { display: block; font-weight: 500; color: #8a948f; font-size: .78rem; }
+  .linea { padding: 12px 16px; border: 1px dashed #d6ddd9; border-radius: 12px; color: #8a948f; font-size: .9rem; }
+  .linea.bloqueado { border-color: #a23b2c; color: #a23b2c; }
+  .tarjeta-cita { background: #fff; border: 1px solid #e3e8e5; border-left: 5px solid #1f5f3e; border-radius: 0 12px 12px 0;
+                  padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .tarjeta-cita .arriba { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+  .tarjeta-cita .nombre { font-weight: 700; color: #1f2a25; font-size: 1.02rem; }
+  .tarjeta-cita .datos { color: #5b6661; font-size: .86rem; }
+  .tarjeta-cita .motivo { color: #3d4843; font-size: .92rem; }
+  .tarjeta-cita .acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+  .tarjeta-cita .acciones form { margin: 0; }
+  .pausa { text-align: center; font-size: .8rem; color: #6b7570; padding: 6px 0; border-top: 1px dashed #cfd8d3; border-bottom: 1px dashed #cfd8d3; }
+  .vacio { text-align: center; padding: 30px 20px; color: #5b6661; }
+
+  .estado { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+  .estado.pendiente { border: 1px solid #1f5f3e; color: #1f5f3e; background: #fff; }
+  .estado.confirmada, .estado.atendida { background: #1f5f3e; color: #fff; }
+  .estado.no-asistio { background: #a23b2c; color: #fff; }
+
+  @media (max-width: 640px) {
+    .turno { grid-template-columns: 1fr; gap: 4px; }
+    .turno .hora { padding-top: 0; }
+    .semana .nombre { font-size: .7rem; }
+  }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor">
+
+  <div class="cabecera">
+    <div>
+      <h2>{{ dia|date:"l j \d\e F" }}</h2>
+      <div class="sub">{{ personal.persona.nombre_completo }} · {{ personal.area }}</div>
+    </div>
+    <div class="navegacion">
+      <a class="boton chico" href="?dia={{ dia_anterior|date:'Y-m-d' }}" aria-label="Día anterior">‹</a>
+      {% if dia != hoy %}<a class="boton chico" href="?">Hoy</a>{% endif %}
+      <a class="boton chico" href="?dia={{ dia_siguiente|date:'Y-m-d' }}" aria-label="Día siguiente">›</a>
+      <form method="get" style="margin:0">
+        <input type="date" name="dia" value="{{ dia|date:'Y-m-d' }}" onchange="this.form.submit()" aria-label="Ir a una fecha">
+      </form>
+    </div>
+  </div>
+
+  <div class="semana">
+    {% for d in semana %}
+      <a href="?dia={{ d.fecha|date:'Y-m-d' }}" class="{% if d.elegido %}elegido{% endif %} {% if d.es_hoy %}hoy{% endif %}">
+        <span class="nombre">{{ d.fecha|date:"D" }}</span>
+        <span class="numero">{{ d.fecha|date:"j" }}</span>
+        <span class="citas">{{ d.citas }} cita{{ d.citas|pluralize }}</span>
+      </a>
+    {% endfor %}
+  </div>
+
+  {% if sin_registrar %}
+    <div class="pendientes">
+      <h3>Pendientes de registrar ({{ sin_registrar|length }})</h3>
+      <p>Estas citas de días anteriores no tienen marcada la asistencia.</p>
+      {% for c in sin_registrar %}
+        <div class="fila-p">
+          <span><strong>{{ c.horario.fecha|date:"d/m" }} {{ c.horario.hora_inicio|time:"H:i" }}</strong> · {{ c.estudiante.persona.nombre_completo }}</span>
+          <span style="display:flex; gap:6px;">
+            <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}" style="margin:0">
+              {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="1">
+              <button type="submit" class="boton chico primario">Atendida</button>
+            </form>
+            <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}" style="margin:0">
+              {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="0">
+              <button type="submit" class="boton chico peligro">No asistió</button>
+            </form>
+          </span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  {% if feriado %}<div class="aviso gris">Feriado: {{ feriado.nombre }}. No hay atención este día.</div>{% endif %}
+  {% for a in ausencias %}<div class="aviso rojo">Ausencia registrada ({{ a.descripcion_horario }}): {{ a.motivo }}</div>{% endfor %}
+
+  {% if items %}
+    <div class="resumen-dia">
+      <span class="dato"><strong>{{ resumen.citas }}</strong> cita{{ resumen.citas|pluralize }}</span>
+      <span class="dato"><strong>{{ resumen.por_atender }}</strong> por atender</span>
+      <span class="dato"><strong>{{ resumen.atendidas }}</strong> atendida{{ resumen.atendidas|pluralize }}</span>
+      <span class="dato"><strong>{{ resumen.libres }}</strong> turno{{ resumen.libres|pluralize }} libre{{ resumen.libres|pluralize }}</span>
+    </div>
+
+    <div class="lista">
+      {% for item in items %}
+        {% if item.tipo == "pausa" %}
+          <div class="pausa">Pausa {{ item.desde|time:"H:i" }} – {{ item.hasta|time:"H:i" }}</div>
+        {% else %}
+          <div class="turno">
+            <div class="hora">{{ item.h.hora_inicio|time:"H:i" }}<small>hasta {{ item.h.hora_fin|time:"H:i" }}</small></div>
+            {% with c=item.cita %}
+              {% if c %}
+                <div class="tarjeta-cita">
+                  <div class="arriba">
+                    <div>
+                      <div class="nombre">{{ c.estudiante.persona.nombre_completo }}</div>
+                      <div class="datos">
+                        {{ c.estudiante.codigo_estudiantil }} · {{ c.estudiante.carrera }} · {{ c.estudiante.semestre }}.º semestre
+                      </div>
+                    </div>
+                    <span class="estado {{ c.estado.nombre|slugify }}">{{ c.estado }}</span>
+                  </div>
+                  <div class="motivo"><strong>Motivo:</strong> {{ c.motivo }}</div>
+                  <div class="datos">
+                    {% if c.estudiante.persona.telefono %}Cel. {{ c.estudiante.persona.telefono }} · {% endif %}{{ c.estudiante.persona.usuario.email }}
+                  </div>
+                  {% if c.estado.es_activo %}
+                    <div class="acciones">
+                      {% if item.empezo %}
+                        <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}">
+                          {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="1">
+                          <button type="submit" class="boton chico primario">Atendida</button>
+                        </form>
+                        <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}"
+                              onsubmit="return confirm('¿Marcar que {{ c.estudiante.persona.nombre_corto }} no asistió?');">
+                          {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="0">
+                          <button type="submit" class="boton chico peligro">No asistió</button>
+                        </form>
+                      {% else %}
+                        <a class="boton chico" href="{% url 'citas:agenda_reprogramar' c.pk %}?volver={{ volver|urlencode }}">Reprogramar</a>
+                        <a class="boton chico peligro" href="{% url 'citas:agenda_cancelar' c.pk %}?volver={{ volver|urlencode }}">Cancelar</a>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </div>
+              {% elif item.bloqueado %}
+                <div class="linea bloqueado">Bloqueado</div>
+              {% elif item.empezo %}
+                <div class="linea">Sin cita</div>
+              {% else %}
+                <div class="linea">Libre</div>
+              {% endif %}
+            {% endwith %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% elif not feriado %}
+    <div class="caja vacio">No tienes turnos este día.</div>
+  {% endif %}
+
+</div>
+{% endblock %}

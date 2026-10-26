@@ -5,6 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect, render
 from django.urls import reverse
+from citas import servicios as servicios_citas
+from datetime import timedelta
+
+from django.utils import timezone
+
+from citas.models import Cita, EstadoCita
 
 
 class LoginCedulaForm(AuthenticationForm):
@@ -30,8 +36,28 @@ def inicio(request):
 
 @login_required
 def panel(request):
-    return render(request, "principal/panel.html")
-
+    contexto = {}
+    persona = request.user.persona
+    if request.user.rol == "ESTUDIANTE" and persona:
+        estudiante = getattr(persona, "estudiante", None)
+        if estudiante:
+            # Como máximo hay una cita activa por área (3 en total); se muestran las 2 más cercanas.
+            proximas = list(servicios_citas.citas_activas_futuras(estudiante))
+            contexto["proximas_citas"] = proximas[:2]
+            contexto["otras_citas"] = max(len(proximas) - 2, 0)
+            # Inasistencia de los últimos 7 días, para invitarlo a agendar de nuevo
+            contexto["inasistencia"] = (
+                Cita.objects
+                .filter(
+                    estudiante=estudiante,
+                    estado__nombre=EstadoCita.NO_ASISTIO,
+                    horario__fecha__gte=timezone.localdate() - timedelta(days=7),
+                )
+                .select_related("horario__personal__area")
+                .order_by("-horario__fecha")
+                .first()
+            )
+    return render(request, "principal/panel.html", contexto)
 
 class CambiarContrasenaView(auth_views.PasswordChangeView):
     """Cambio de contraseña para cualquier perfil (ya exige sesión iniciada)."""

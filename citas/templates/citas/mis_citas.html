@@ -1,0 +1,151 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Mis citas{% endblock %}
+{% block titulo_pagina %}Mis citas{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+<style>
+  .contenedor { max-width: 960px; }
+  .cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .cabecera h2 { margin: 0; color: #184c32; font-size: 1.25rem; }
+  .subtitulo { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #5b6661; margin: 28px 0 12px; }
+
+  .estado { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+  .estado.pendiente { border: 1px solid #1f5f3e; color: #1f5f3e; background: #fff; }
+  .estado.confirmada, .estado.atendida { background: #1f5f3e; color: #fff; }
+  .estado.cancelada { border: 1px solid #a23b2c; color: #a23b2c; background: #fff; }
+  .estado.no-asistio { background: #a23b2c; color: #fff; }
+  .estado.reprogramada { background: #6b7570; color: #fff; }
+
+  /* Próximas */
+  .proximas { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+  .cita { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .cita .arriba { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .cita .area { font-weight: 700; color: #184c32; font-size: 1.05rem; }
+  .cita .cuando strong { display: block; font-size: 1.1rem; color: #1f2a25; }
+  .cita .cuando span { color: #3d4843; font-weight: 600; }
+  .cita .quien, .cita .motivo { color: #5b6661; font-size: .9rem; }
+  .cita .pie { margin-top: auto; padding-top: 12px; border-top: 1px solid #eef2f0; }
+  .cita .limite { font-size: .82rem; color: #6b7570; margin-bottom: 10px; }
+  .cita .aviso { font-size: .85rem; color: #7c2b20; }
+
+  .vacio { text-align: center; padding: 30px 20px; }
+  .vacio p { margin: 0 0 14px; color: #5b6661; }
+
+  /* Historial */
+  .historial { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; overflow: hidden; }
+  .fila { display: grid; grid-template-columns: 150px 1fr auto; gap: 14px; align-items: start; padding: 14px 18px; border-bottom: 1px solid #eef2f0; }
+  .fila:last-child { border-bottom: none; }
+  .fila .fecha strong { display: block; color: #1f2a25; }
+  .fila .fecha span { color: #5b6661; font-size: .88rem; }
+  .fila .detalle { color: #3d4843; font-size: .92rem; }
+  .fila .detalle .nota-fila { color: #6b7570; font-size: .85rem; margin-top: 4px; }
+  @media (max-width: 600px) {
+    .fila { grid-template-columns: 1fr auto; }
+    .fila .detalle { grid-column: 1 / -1; grid-row: 2; }
+  }
+
+  .paginacion { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+                padding: 14px 18px; border-top: 1px solid #e3e8e5; }
+  .paginacion .enlaces { display: flex; gap: 8px; }
+  .paginacion a, .paginacion span.actual { padding: 7px 14px; border-radius: 8px; border: 1px solid #cfd8d3;
+                                           text-decoration: none; color: #1f5f3e; font-weight: 600; font-size: .9rem; }
+  .paginacion span.actual { background: #1f5f3e; border-color: #1f5f3e; color: #fff; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor">
+
+  <div class="cabecera">
+    <h2>Próximas citas</h2>
+    <a href="{% url 'citas:agendar' %}" class="boton primario">+ Agendar cita</a>
+  </div>
+
+  {% if proximas %}
+    <div class="proximas">
+      {% for c in proximas %}
+        <div class="cita">
+          <div class="arriba">
+            <span class="area">{{ c.horario.personal.area }}</span>
+            <span class="estado {{ c.estado.nombre|slugify }}">{{ c.estado }}</span>
+          </div>
+          <div class="cuando">
+            <strong>{{ c.horario.fecha|date:"l j \d\e F"|capfirst }}</strong>
+            <span>{{ c.horario.hora_inicio|time:"H:i" }} – {{ c.horario.hora_fin|time:"H:i" }}</span>
+          </div>
+          <div class="quien">{{ c.horario.personal.persona.nombre_completo }}</div>
+          <div class="motivo">Motivo: {{ c.motivo }}</div>
+          <div class="pie">
+            {% if c.puede_cancelar_estudiante %}
+              <div class="limite">Puedes cancelar hasta el {{ c.limite_cancelacion_estudiante|date:"j \d\e F, H:i" }}.</div>
+              <a href="{% url 'citas:mis_citas_cancelar' c.pk %}" class="boton chico peligro">Cancelar cita</a>
+            {% else %}
+              <div class="aviso">
+                Faltan menos de {{ horas_cancelacion }} horas: ya no se puede cancelar en línea.
+                Si no puedes asistir, comunícate con Bienestar Universitario.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="caja vacio">
+      <p>No tienes citas próximas.</p>
+      <a href="{% url 'citas:agendar' %}" class="boton primario">Agendar una cita</a>
+    </div>
+  {% endif %}
+
+  <div class="subtitulo">Historial</div>
+
+  <div class="historial">
+    {% for c in page_obj %}
+      <div class="fila">
+        <div class="fecha">
+          <strong>{{ c.horario.fecha|date:"d/m/Y" }}</strong>
+          <span>{{ c.horario.hora_inicio|time:"H:i" }} · {{ c.horario.personal.area }}</span>
+        </div>
+        <div class="detalle">
+          {{ c.motivo }}
+          {% if c.estado.nombre == "Cancelada" %}
+            <div class="nota-fila">
+              {% if c.cancelada_por_id == request.user.pk %}Cancelaste esta cita{% else %}Cancelada por Bienestar Universitario{% endif %}{% if c.motivo_cancelacion %}: {{ c.motivo_cancelacion }}{% endif %}
+            </div>
+          {% elif c.estado.nombre == "Reprogramada" %}
+            {% with nueva=c.reprogramaciones.all.0 %}
+              <div class="nota-fila">
+                {% if nueva %}Se movió al {{ nueva.horario.fecha|date:"d/m/Y" }} a las {{ nueva.horario.hora_inicio|time:"H:i" }}.{% endif %}
+                {% if c.motivo_cancelacion %}Motivo: {{ c.motivo_cancelacion }}{% endif %}
+              </div>
+            {% endwith %}
+            {% elif c.estado.nombre == "No asistió" %}
+            <div class="nota-fila">
+              No registramos tu asistencia a esta cita. Si aún necesitas atención,
+              <a href="{% url 'citas:agendar' %}">agenda una nueva cita</a>.
+            </div>
+          {% elif c.estado.es_activo %}
+            <div class="nota-fila">El profesional aún no registra la atención.</div>
+          {% endif %}
+        </div>
+        <span class="estado {{ c.estado.nombre|slugify }}">{{ c.estado }}</span>
+      </div>
+    {% empty %}
+      <div class="vacio"><p style="margin:0">Aquí aparecerán tus citas pasadas y canceladas.</p></div>
+    {% endfor %}
+
+    {% if page_obj.has_other_pages %}
+      <div class="paginacion">
+        <span class="tenue">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        <div class="enlaces">
+          {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">Anterior</a>{% endif %}
+          <span class="actual">{{ page_obj.number }}</span>
+          {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Siguiente</a>{% endif %}
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

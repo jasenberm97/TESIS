@@ -1,0 +1,57 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Confirmar cita{% endblock %}
+{% block titulo_pagina %}Agendar cita{% endblock %}
+
+{% block estilos %}
+{% include "usuarios/_estilos_formulario.html" %}
+<style>
+  .formulario { max-width: 720px; }
+  .resumen-turno { display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; margin: 0; }
+  .resumen-turno dt { color: #5b6661; font-weight: 600; font-size: .9rem; }
+  .resumen-turno dd { margin: 0; color: #1f2a25; font-weight: 600; }
+  .campo textarea { padding: 10px 12px; border: 1px solid #cfd8d3; border-radius: 10px; font: inherit; color: #1f2a25;
+                    width: 100%; box-sizing: border-box; resize: vertical; min-height: 90px; }
+  .campo textarea:focus { outline: none; border-color: #1f5f3e; box-shadow: 0 0 0 3px rgba(31,95,62,.15); }
+  .campo.con-error textarea { border-color: #a23b2c; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Confirma tu cita</h2>
+    <a href="{{ volver }}" class="volver">← Elegir otro horario</a>
+  </div>
+
+  <div class="seccion-form">
+    <h3>Tu turno</h3>
+    <dl class="resumen-turno" style="margin-top:12px">
+      <dt>Área</dt><dd>{{ horario.personal.area }}</dd>
+      <dt>Profesional</dt><dd>{{ horario.personal.persona.nombre_completo }}</dd>
+      <dt>Día</dt><dd>{{ horario.fecha|date:"l j \d\e F \d\e Y"|capfirst }}</dd>
+      <dt>Hora</dt><dd>{{ horario.hora_inicio|time:"H:i" }} – {{ horario.hora_fin|time:"H:i" }}</dd>
+    </dl>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="seccion-form">
+      <h3>Motivo</h3>
+      {% include "usuarios/_campo.html" with campo=form.motivo %}
+    </div>
+
+    <div class="nota">
+      Recuerda llegar unos minutos antes. Si no puedes asistir, cancela tu cita hasta
+      {{ horas_cancelacion }} horas antes para que otro estudiante pueda usar el turno.
+    </div>
+
+    <div class="acciones-form">
+      <a href="{{ volver }}" class="boton secundario">Elegir otro horario</a>
+      <button type="submit" class="boton primario">Confirmar cita</button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Registrar feriado{% endblock %}
+{% block titulo_pagina %}Horarios de atención{% endblock %}
+
+{% block estilos %}
+{% include "usuarios/_estilos_formulario.html" %}
+<style>
+  .afectadas { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .afectadas th { text-align: left; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: #5b6661;
+                  background: #f7f9f8; padding: 10px 14px; border-bottom: 1px solid #e3e8e5; }
+  .afectadas td { padding: 10px 14px; border-bottom: 1px solid #eef2f0; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Registrar feriado</h2>
+    <a href="{% url 'citas:horarios_feriados' %}" class="volver">← Volver a feriados</a>
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="alerta-error">{% for e in form.non_field_errors %}{{ e }} {% endfor %}</div>
+  {% elif form.errors %}
+    <div class="alerta-error">Revisa los campos marcados.</div>
+  {% endif %}
+
+  {% if afectadas is not None %}
+    <div class="seccion-form">
+      <h3>Revisa antes de confirmar</h3>
+      <p class="descripcion">
+        <strong>{{ form.cleaned_data.nombre }}</strong> —
+        {{ form.cleaned_data.fecha|date:"l j \d\e F \d\e Y"|capfirst }}
+      </p>
+      {% if afectadas %}
+        <div class="alerta-error">
+          Se cancelarán {{ afectadas|length }} cita{{ afectadas|length|pluralize }} de ese día.
+          Los estudiantes verán la cancelación y el motivo en «Mis citas».
+        </div>
+        <table class="afectadas">
+          <thead><tr><th>Hora</th><th>Área</th><th>Estudiante</th></tr></thead>
+          <tbody>
+            {% for c in afectadas %}
+              <tr>
+                <td>{{ c.horario.hora_inicio|time:"H:i" }} – {{ c.horario.hora_fin|time:"H:i" }}</td>
+                <td>{{ c.horario.personal.area }}</td>
+                <td>{{ c.estudiante.persona.nombre_completo }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="nota" style="margin-bottom:0">No hay citas agendadas ese día; solo se bloquearán los turnos.</div>
+      {% endif %}
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      {% for campo in form %}{{ campo.as_hidden }}{% endfor %}
+      <div class="acciones-form">
+        <button type="submit" name="modificar" value="1" class="boton secundario">Modificar</button>
+        <button type="submit" name="confirmar" value="1" class="boton primario">
+          {% if afectadas %}Confirmar y cancelar citas{% else %}Confirmar feriado{% endif %}
+        </button>
+      </div>
+    </form>
+
+  {% else %}
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="seccion-form">
+        <h3>Datos del feriado</h3>
+        <p class="descripcion">Se aplica a todos los profesionales de Bienestar Universitario.</p>
+        <div class="rejilla">
+          {% include "usuarios/_campo.html" with campo=form.fecha %}
+          {% include "usuarios/_campo.html" with campo=form.nombre %}
+        </div>
+      </div>
+      <div class="acciones-form">
+        <a href="{% url 'citas:horarios_feriados' %}" class="boton secundario">Cancelar</a>
+        <button type="submit" class="boton primario">Revisar</button>
+      </div>
+    </form>
+  {% endif %}
+
+</div>
+{% endblock %}

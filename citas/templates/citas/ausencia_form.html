@@ -1,0 +1,143 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Registrar ausencia{% endblock %}
+{% block titulo_pagina %}Horarios de atención{% endblock %}
+
+{% block estilos %}
+{% include "usuarios/_estilos_formulario.html" %}
+<style>
+  .opciones { display: flex; flex-wrap: wrap; gap: 8px; }
+  .opcion { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid #cfd8d3;
+            border-radius: 10px; cursor: pointer; font-weight: 500; color: #3d4843; background: #fff; user-select: none; }
+  .campo .opcion input { width: 18px; height: 18px; margin: 0; accent-color: #1f5f3e; cursor: pointer; }
+  .opcion:has(input:checked) { border-color: #1f5f3e; color: #1f5f3e; font-weight: 600; }
+  .campo-completo { grid-column: 1 / -1; }
+
+  .resumen-ausencia { display: grid; grid-template-columns: 140px 1fr; gap: 8px 16px; margin: 0 0 18px; }
+  .resumen-ausencia dt { color: #5b6661; font-weight: 600; font-size: .9rem; }
+  .resumen-ausencia dd { margin: 0; color: #1f2a25; }
+  .afectadas { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .afectadas th { text-align: left; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: #5b6661;
+                  background: #f7f9f8; padding: 10px 14px; border-bottom: 1px solid #e3e8e5; }
+  .afectadas td { padding: 10px 14px; border-bottom: 1px solid #eef2f0; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Registrar ausencia</h2>
+    <a href="{{ volver }}" class="volver">← Volver al calendario</a>
+  </div>
+
+  <div class="nota">
+    <strong>{{ personal.persona.nombre_completo }}</strong> — {{ personal.area }}.
+    Los turnos de la ausencia quedan bloqueados y las citas que caigan en ella se cancelan.
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="alerta-error">{% for e in form.non_field_errors %}{{ e }} {% endfor %}</div>
+  {% elif form.errors %}
+    <div class="alerta-error">Revisa los campos marcados.</div>
+  {% endif %}
+
+  {% if afectadas is not None %}
+    <!-- Paso 2: revisar antes de confirmar -->
+    <div class="seccion-form">
+      <h3>Revisa antes de confirmar</h3>
+      <dl class="resumen-ausencia">
+        <dt>Fechas</dt><dd>{{ vista_previa.descripcion_fechas }}</dd>
+        <dt>Horario</dt><dd>{{ vista_previa.descripcion_horario }}</dd>
+        <dt>Motivo</dt><dd>{{ vista_previa.motivo }}</dd>
+      </dl>
+
+      {% if afectadas %}
+        <div class="alerta-error">
+          Se cancelarán {{ afectadas|length }} cita{{ afectadas|length|pluralize }}.
+          Los estudiantes verán la cancelación y el motivo en «Mis citas».
+        </div>
+        <table class="afectadas">
+          <thead><tr><th>Fecha</th><th>Hora</th><th>Estudiante</th></tr></thead>
+          <tbody>
+            {% for c in afectadas %}
+              <tr>
+                <td>{{ c.horario.fecha|date:"l d/m/Y"|capfirst }}</td>
+                <td>{{ c.horario.hora_inicio|time:"H:i" }} – {{ c.horario.hora_fin|time:"H:i" }}</td>
+                <td>{{ c.estudiante.persona.nombre_completo }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="nota" style="margin-bottom:0">No hay citas agendadas en ese período; solo se bloquearán los turnos.</div>
+      {% endif %}
+    </div>
+
+    <form method="post">
+      {% csrf_token %}
+      {% for campo in form %}{{ campo.as_hidden }}{% endfor %}
+      <div class="acciones-form">
+        <button type="submit" name="modificar" value="1" class="boton secundario">Modificar</button>
+        <button type="submit" name="confirmar" value="1" class="boton primario">
+          {% if afectadas %}Confirmar y cancelar citas{% else %}Confirmar ausencia{% endif %}
+        </button>
+      </div>
+    </form>
+
+  {% else %}
+    <!-- Paso 1: datos de la ausencia -->
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="seccion-form">
+        <h3>Período</h3>
+        <div class="rejilla">
+          {% include "usuarios/_campo.html" with campo=form.fecha_desde %}
+          {% include "usuarios/_campo.html" with campo=form.fecha_hasta %}
+          <div class="campo campo-completo{% if form.tipo.errors %} con-error{% endif %}">
+            <label>{{ form.tipo.label }} <span class="obligatorio">*</span></label>
+            <div class="opciones">
+              {% for opcion in form.tipo %}
+                <label class="opcion">{{ opcion.tag }} <span>{{ opcion.choice_label }}</span></label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="rejilla" id="horas-parciales" style="margin-top:16px">
+          {% include "usuarios/_campo.html" with campo=form.hora_desde %}
+          {% include "usuarios/_campo.html" with campo=form.hora_hasta %}
+        </div>
+      </div>
+
+      <div class="seccion-form">
+        <h3>Motivo</h3>
+        <div class="rejilla">
+          <div class="campo-completo">{% include "usuarios/_campo.html" with campo=form.motivo %}</div>
+        </div>
+      </div>
+
+      <div class="acciones-form">
+        <a href="{{ volver }}" class="boton secundario">Cancelar</a>
+        <button type="submit" class="boton primario">Revisar</button>
+      </div>
+    </form>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const horas = document.getElementById("horas-parciales");
+    if (!horas) return;
+    const radios = document.querySelectorAll('[name="tipo"]');
+    function actualizar() {
+      const elegido = document.querySelector('[name="tipo"]:checked');
+      horas.style.display = elegido && elegido.value === "parcial" ? "" : "none";
+    }
+    radios.forEach((r) => r.addEventListener("change", actualizar));
+    actualizar();
+  })();
+</script>
+{% endblock %}

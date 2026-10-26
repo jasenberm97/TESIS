@@ -1,0 +1,55 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Cancelar cita{% endblock %}
+{% block titulo_pagina %}Mis citas{% endblock %}
+
+{% block estilos %}
+{% include "usuarios/_estilos_formulario.html" %}
+<style>
+  .formulario { max-width: 720px; }
+  .resumen-turno { display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; margin: 12px 0 0; }
+  .resumen-turno dt { color: #5b6661; font-weight: 600; font-size: .9rem; }
+  .resumen-turno dd { margin: 0; color: #1f2a25; font-weight: 600; }
+  .campo textarea { padding: 10px 12px; border: 1px solid #cfd8d3; border-radius: 10px; font: inherit; color: #1f2a25;
+                    width: 100%; box-sizing: border-box; resize: vertical; min-height: 90px; }
+  .campo textarea:focus { outline: none; border-color: #1f5f3e; box-shadow: 0 0 0 3px rgba(31,95,62,.15); }
+  .campo.con-error textarea { border-color: #a23b2c; }
+  .boton.peligro { background: #a23b2c; border-color: #a23b2c; color: #fff; }
+  .boton.peligro:hover { background: #8a3125; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Cancelar cita</h2>
+    <a href="{% url 'citas:mis_citas' %}" class="volver">← Volver a mis citas</a>
+  </div>
+
+  <div class="seccion-form">
+    <h3>La cita que vas a cancelar</h3>
+    <dl class="resumen-turno">
+      <dt>Área</dt><dd>{{ cita.horario.personal.area }}</dd>
+      <dt>Profesional</dt><dd>{{ cita.horario.personal.persona.nombre_completo }}</dd>
+      <dt>Día</dt><dd>{{ cita.horario.fecha|date:"l j \d\e F \d\e Y"|capfirst }}</dd>
+      <dt>Hora</dt><dd>{{ cita.horario.hora_inicio|time:"H:i" }} – {{ cita.horario.hora_fin|time:"H:i" }}</dd>
+    </dl>
+  </div>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="seccion-form">
+      {% include "usuarios/_campo.html" with campo=form.motivo %}
+    </div>
+
+    <div class="nota">El turno quedará libre para otro estudiante. Si luego lo necesitas, puedes agendar una nueva cita.</div>
+
+    <div class="acciones-form">
+      <a href="{% url 'citas:mis_citas' %}" class="boton secundario">No, mantener mi cita</a>
+      <button type="submit" class="boton peligro">Sí, cancelar cita</button>
+    </div>
+  </form>
+
+</div>
+{% endblock %}

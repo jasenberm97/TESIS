@@ -1,0 +1,82 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Agendar cita{% endblock %}
+{% block titulo_pagina %}Agendar cita{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+<style>
+  .contenedor { max-width: 960px; }
+  .intro h2 { margin: 0 0 6px; color: #184c32; font-size: 1.3rem; }
+  .intro p { margin: 0 0 18px; color: #5b6661; }
+  .reglas { background: #fff; border: 1px solid #e3e8e5; border-left: 5px solid #1f5f3e; padding: 12px 16px;
+            color: #3d4843; font-size: .9rem; margin-bottom: 22px; }
+  .reglas ul { margin: 0; padding-left: 18px; }
+  .reglas li { margin: 2px 0; }
+
+  .areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+  .area { display: flex; flex-direction: column; gap: 12px; background: #fff; border: 1px solid #e3e8e5; border-radius: 14px;
+          padding: 22px 20px; text-decoration: none; color: inherit; transition: border-color .15s, box-shadow .15s; }
+  a.area:hover { border-color: #1f5f3e; box-shadow: 0 4px 14px rgba(24, 76, 50, .08); }
+  .area .icono { width: 48px; height: 48px; border-radius: 12px; background: #1f5f3e; color: #fff;
+                 display: grid; place-items: center; font-weight: 700; font-size: 1.2rem; }
+  .area.bloqueada .icono, .area.vacia .icono { background: #6b7570; }
+  .area h3 { margin: 0; color: #1f2a25; font-size: 1.15rem; }
+  .area .quien { color: #5b6661; font-size: .9rem; }
+  .area .pie { margin-top: auto; padding-top: 12px; border-top: 1px solid #eef2f0; font-size: .9rem; font-weight: 600; }
+  .area .pie.verde { color: #1f5f3e; }
+  .area .pie.gris { color: #6b7570; font-weight: 500; }
+  .tu-cita { background: #f7f9f8; border: 1px solid #e3e8e5; border-radius: 10px; padding: 10px 12px; font-size: .88rem; color: #3d4843; }
+  .tu-cita strong { color: #184c32; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor">
+
+  <div class="intro">
+    <h2>¿Con qué área necesitas atención?</h2>
+    <p>Elige el área y después el día y la hora que te convengan.</p>
+  </div>
+
+  <div class="reglas">
+    <ul>
+      <li>Puedes tener <strong>una cita activa por área</strong>.</li>
+      <li>Puedes cancelar tu cita hasta <strong>{{ horas_cancelacion }} horas antes</strong>.</li>
+      <li>Si necesitas cambiar el horario, cancela tu cita y agenda una nueva.</li>
+    </ul>
+  </div>
+
+  <div class="areas">
+    {% for o in opciones %}
+      {% if o.cita %}
+        <div class="area bloqueada">
+          <div class="icono">{{ o.area.nombre|first }}</div>
+          <h3>{{ o.area.nombre }}</h3>
+          <div class="tu-cita">
+            Ya tienes una cita el <strong>{{ o.cita.horario.fecha|date:"l j \d\e F"|capfirst }}</strong>
+            a las <strong>{{ o.cita.horario.hora_inicio|time:"H:i" }}</strong>.
+          </div>
+          <a class="pie verde" href="{% url 'citas:mis_citas' %}" style="text-decoration:none">Ver o cancelar en Mis citas →</a>
+        </div>
+      {% elif o.libres and o.profesionales %}
+        <a class="area" href="{% url 'citas:agendar_turnos' o.area.pk %}">
+          <div class="icono">{{ o.area.nombre|first }}</div>
+          <h3>{{ o.area.nombre }}</h3>
+          <div class="quien">
+            {% for p in o.profesionales %}{{ p.persona.nombre_corto }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          </div>
+          <div class="pie verde">{{ o.libres }} turno{{ o.libres|pluralize }} disponible{{ o.libres|pluralize }} · Elegir horario →</div>
+        </a>
+      {% else %}
+        <div class="area vacia">
+          <div class="icono">{{ o.area.nombre|first }}</div>
+          <h3>{{ o.area.nombre }}</h3>
+          <div class="pie gris">Por ahora no hay turnos disponibles. Vuelve a revisar en unos días.</div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

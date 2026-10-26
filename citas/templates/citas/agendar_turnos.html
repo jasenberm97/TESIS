@@ -1,0 +1,120 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Agendar cita · {{ area }}{% endblock %}
+{% block titulo_pagina %}Agendar cita{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+<style>
+  .contenedor { max-width: 960px; }
+  .cabecera h2 { margin: 0; color: #184c32; font-size: 1.3rem; }
+  .cabecera p { margin: 4px 0 18px; color: #5b6661; }
+
+  .navegacion { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;
+                background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; padding: 12px 14px; margin-bottom: 14px; }
+  .navegacion .rango { font-weight: 700; color: #1f2a25; text-align: center; flex: 1; }
+  .boton.invisible { visibility: hidden; }
+
+  .dias { display: flex; flex-direction: column; gap: 10px; }
+  .dia { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; padding: 14px 16px;
+         display: grid; grid-template-columns: 130px 1fr; gap: 12px; align-items: center; }
+  .dia .fecha strong { display: block; color: #1f2a25; text-transform: capitalize; }
+  .dia .fecha span { color: #5b6661; font-size: .88rem; }
+  .turnos { display: flex; flex-wrap: wrap; gap: 8px; }
+  .turno { display: inline-block; padding: 9px 14px; border: 1px solid #1f5f3e; border-radius: 10px; color: #1f5f3e;
+           background: #fff; font-weight: 600; font-variant-numeric: tabular-nums; text-decoration: none; font-size: .92rem; }
+  .turno:hover { background: #1f5f3e; color: #fff; }
+  .turno small { display: block; font-weight: 500; font-size: .75rem; }
+  .sin { color: #8a948f; font-size: .9rem; }
+  .etiqueta-feriado { display: inline-block; background: #6b7570; color: #fff; border-radius: 8px; padding: 6px 10px; font-size: .85rem; font-weight: 600; }
+
+  .vacio { text-align: center; padding: 26px 20px; }
+  .vacio p { margin: 0 0 14px; color: #5b6661; }
+  .pie-nota { margin-top: 14px; color: #6b7570; font-size: .85rem; }
+
+  @media (max-width: 600px) {
+    .dia { grid-template-columns: 1fr; gap: 8px; }
+    .turnos { gap: 6px; }
+    .turno { padding: 10px 12px; }
+  }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor">
+
+  <a class="volver" href="{% url 'citas:agendar' %}">← Elegir otra área</a>
+
+  <div class="cabecera">
+    <h2>{{ area.nombre }}</h2>
+    <p>
+      {% if profesionales %}Atiende:
+        {% for p in profesionales %}{{ p.persona.nombre_completo }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+      {% endif %}
+      Toca la hora que prefieras.
+    </p>
+  </div>
+
+  <div class="navegacion">
+    {% if semana_anterior %}
+      <a class="boton chico" href="?semana={{ semana_anterior|date:'Y-m-d' }}" aria-label="Semana anterior">‹ Anterior</a>
+    {% else %}
+      <span class="boton chico invisible">‹ Anterior</span>
+    {% endif %}
+    <span class="rango">{{ lunes|date:"j \d\e F" }} – {{ viernes|date:"j \d\e F" }}</span>
+    {% if semana_siguiente %}
+      <a class="boton chico" href="?semana={{ semana_siguiente|date:'Y-m-d' }}" aria-label="Semana siguiente">Siguiente ›</a>
+    {% else %}
+      <span class="boton chico invisible">Siguiente ›</span>
+    {% endif %}
+  </div>
+
+  {% if not total %}
+    <div class="caja vacio">
+      <p>No hay turnos disponibles en esta semana.</p>
+      {% if proximo %}
+        <a class="boton primario" href="?semana={{ proximo.fecha|date:'Y-m-d' }}">
+          Ver el próximo disponible: {{ proximo.fecha|date:"l j \d\e F" }}
+        </a>
+      {% else %}
+        <p class="tenue" style="margin:0">Por ahora no hay más turnos publicados. Vuelve a revisar en unos días.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <div class="dias">
+    {% for dia in dias %}
+      <div class="dia">
+        <div class="fecha">
+          <strong>{{ dia.fecha|date:"l" }}</strong>
+          <span>{{ dia.fecha|date:"j \d\e F" }}</span>
+        </div>
+        <div>
+          {% if dia.feriado %}
+            <span class="etiqueta-feriado">Feriado · {{ dia.feriado.nombre }}</span>
+          {% elif dia.pasado %}
+            <span class="sin">Este día ya pasó.</span>
+          {% elif dia.fuera %}
+            <span class="sin">Aún no se puede reservar para este día.</span>
+          {% elif dia.turnos %}
+            <div class="turnos">
+              {% for h in dia.turnos %}
+                <a class="turno" href="{% url 'citas:agendar_confirmar' h.pk %}"
+                   title="{{ h.hora_inicio|time:'H:i' }} – {{ h.hora_fin|time:'H:i' }}">
+                  {{ h.hora_inicio|time:"H:i" }}
+                  {% if profesionales|length > 1 %}<small>{{ h.personal.persona.nombre_corto }}</small>{% endif %}
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <span class="sin">Sin turnos disponibles.</span>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <p class="pie-nota">Puedes reservar hasta el {{ limite|date:"j \d\e F" }}. Los turnos se reservan con al menos una hora de anticipación.</p>
+
+</div>
+{% endblock %}

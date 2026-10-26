@@ -1,0 +1,147 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Generar turnos{% endblock %}
+{% block titulo_pagina %}Horarios de atención{% endblock %}
+
+{% block estilos %}
+{% include "usuarios/_estilos_formulario.html" %}
+<style>
+  .dias { display: flex; flex-wrap: wrap; gap: 8px; }
+  .dia { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1px solid #cfd8d3;
+         border-radius: 10px; cursor: pointer; font-weight: 500; color: #3d4843; background: #fff; user-select: none; }
+  .campo .dia input { width: 18px; height: 18px; margin: 0; accent-color: #1f5f3e; cursor: pointer; }
+  .dia:has(input:checked) { border-color: #1f5f3e; color: #1f5f3e; font-weight: 600; }
+  .campo-completo { grid-column: 1 / -1; }
+  .subtitulo { font-weight: 600; color: #3d4843; font-size: .92rem; margin: 18px 0 10px; }
+  .subtitulo:first-of-type { margin-top: 0; }
+  .subtitulo small { font-weight: 400; color: #6b7570; }
+  .estimacion { font-weight: 600; color: #184c32; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Generar turnos</h2>
+    <a href={{ volver }} class="volver">← Volver a horarios</a>
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="alerta-error">{% for e in form.non_field_errors %}{{ e }} {% endfor %}</div>
+  {% elif form.errors %}
+    <div class="alerta-error">Revisa los campos marcados.</div>
+  {% endif %}
+
+  <form method="post" novalidate id="form-turnos">
+    {% csrf_token %}
+
+    <div class="seccion-form">
+      <h3>Profesional</h3>
+      <p class="descripcion">Solo aparecen los profesionales con la cuenta activa y sin fecha de salida.</p>
+      <div class="rejilla">
+        <div class="campo-completo">{% include "usuarios/_campo.html" with campo=form.personal %}</div>
+      </div>
+    </div>
+
+    <div class="seccion-form">
+      <h3>Período</h3>
+      <p class="descripcion">Se crean turnos solo en los días marcados dentro del rango de fechas.</p>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.fecha_desde %}
+        {% include "usuarios/_campo.html" with campo=form.fecha_hasta %}
+        <div class="campo campo-completo{% if form.dias.errors %} con-error{% endif %}">
+          <label>{{ form.dias.label }} <span class="obligatorio">*</span></label>
+          <div class="dias">
+            {% for opcion in form.dias %}
+              <label class="dia">{{ opcion.tag }} <span>{{ opcion.choice_label }}</span></label>
+            {% endfor %}
+          </div>
+          {% for error in form.dias.errors %}<small class="error">{{ error }}</small>{% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="seccion-form">
+      <h3>Franjas de atención</h3>
+      <p class="descripcion">
+        Usa dos franjas cuando el profesional tiene pausa de almuerzo (por ejemplo, 08:30–12:00 y 13:00–16:00).
+        Los turnos se generan seguidos dentro de cada franja.
+      </p>
+      <div class="subtitulo">Primera franja</div>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.inicio_1 %}
+        {% include "usuarios/_campo.html" with campo=form.fin_1 %}
+      </div>
+      <div class="subtitulo">Segunda franja <small>(opcional)</small></div>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.inicio_2 %}
+        {% include "usuarios/_campo.html" with campo=form.fin_2 %}
+      </div>
+      <div class="subtitulo">Turnos</div>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.duracion %}
+      </div>
+    </div>
+
+    <div class="nota">
+      Se generarán aproximadamente <span class="estimacion" id="estimacion">—</span> turnos.
+      Los que se crucen con turnos existentes, ya hayan pasado o caigan en una ausencia se omiten
+      automáticamente, así que puedes repetir la generación sin duplicar.
+    </div>
+
+    <div class="acciones-form">
+      <a href={{ volver }} class="boton secundario">Cancelar</a>
+      <button type="submit" class="boton primario">Generar turnos</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const form = document.getElementById("form-turnos");
+    const salida = document.getElementById("estimacion");
+    const campo = (nombre) => form.querySelector(`[name="${nombre}"]`);
+
+    function aFecha(texto) {
+      if (!texto) return null;
+      const [a, m, d] = texto.split("-").map(Number);
+      return new Date(a, m - 1, d);
+    }
+    function aMinutos(texto) {
+      if (!texto) return null;
+      const [h, m] = texto.split(":").map(Number);
+      return h * 60 + m;
+    }
+    function turnosEnFranja(ini, fin, dur) {
+      const a = aMinutos(campo(ini).value), b = aMinutos(campo(fin).value);
+      return a !== null && b !== null && b > a ? Math.floor((b - a) / dur) : 0;
+    }
+
+    function calcular() {
+      const desde = aFecha(campo("fecha_desde").value);
+      const hasta = aFecha(campo("fecha_hasta").value);
+      const dur = parseInt(campo("duracion").value, 10);
+      const dias = [...form.querySelectorAll('[name="dias"]:checked')].map((c) => parseInt(c.value, 10));
+
+      if (!desde || !hasta || !dur || hasta < desde) {
+        salida.textContent = "—";
+        return;
+      }
+      const porDia = turnosEnFranja("inicio_1", "fin_1", dur) + turnosEnFranja("inicio_2", "fin_2", dur);
+      let total = 0;
+      for (let f = new Date(desde); f <= hasta; f.setDate(f.getDate() + 1)) {
+        const diaPython = (f.getDay() + 6) % 7;   // 0 = lunes … 6 = domingo
+        if (dias.includes(diaPython)) total += porDia;
+      }
+      salida.textContent = total;
+    }
+
+    form.addEventListener("input", calcular);
+    form.addEventListener("change", calcular);
+    calcular();
+  })();
+</script>
+{% endblock %}

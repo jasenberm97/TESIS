@@ -1,0 +1,188 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Horario de {{ personal.persona.nombre_corto }}{% endblock %}
+{% block titulo_pagina %}Horarios de atención{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+<style>
+  .cabecera { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 20px; }
+  .cabecera h2 { margin: 0; color: #184c32; font-size: 1.35rem; }
+  .cabecera .sub { color: #5b6661; margin-top: 4px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .barra-semana { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+  .navegacion { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .navegacion .rango { font-weight: 700; color: #1f2a25; padding: 0 6px; }
+  .resumen-semana { display: flex; gap: 8px; flex-wrap: wrap; }
+  .dato { border: 1px solid #e3e8e5; background: #fff; border-radius: 999px; padding: 5px 12px; font-size: .85rem; color: #3d4843; }
+  .dato strong { color: #184c32; }
+  .dato.rojo strong { color: #a23b2c; }
+
+  .calendario-scroll { overflow-x: auto; padding-bottom: 4px; }
+  .calendario { display: grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 10px; min-width: 780px; }
+  .dia { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; padding: 12px 10px;
+         display: flex; flex-direction: column; gap: 6px; min-height: 220px; }
+  .dia.hoy { border-color: #1f5f3e; box-shadow: inset 0 3px 0 #1f5f3e; }
+  .dia-titulo { text-align: center; padding-bottom: 8px; border-bottom: 1px solid #eef2f0; margin-bottom: 4px; }
+  .dia-titulo strong { display: block; color: #1f2a25; text-transform: capitalize; }
+  .dia-titulo span { font-size: .82rem; color: #5b6661; }
+
+  .turno { display: block; text-align: center; padding: 7px 6px; border-radius: 8px; font-size: .86rem; font-weight: 600;
+           font-variant-numeric: tabular-nums; text-decoration: none; line-height: 1.25; }
+  .turno small { display: block; font-weight: 500; font-size: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .turno.libre { border: 1px solid #1f5f3e; color: #1f5f3e; background: #fff; }
+  a.turno.libre:hover { background: #1f5f3e; color: #fff; }
+  .turno.cita { background: #1f5f3e; color: #fff; border: 1px solid #1f5f3e; }
+  .turno.pasado { background: #f3f5f4; color: #8a948f; border: 1px solid #e3e8e5; }
+  .turno.ausencia { background: #fff; color: #a23b2c; border: 1px dashed #a23b2c; }
+  .turno.feriado { background: #fff; color: #6b7570; border: 1px dashed #6b7570; }
+  .pausa { font-size: .75rem; color: #6b7570; text-align: center; border-top: 1px dashed #cfd8d3; margin: 4px 0; padding-top: 4px; }
+  .ausente { background: #a23b2c; color: #fff; border-radius: 8px; padding: 6px 8px; font-size: .8rem; font-weight: 600; text-align: center; }
+  .ausente small { display: block; font-weight: 500; }
+  .ausente.feriado { background: #6b7570; }
+  .sin-turnos { color: #8a948f; font-size: .85rem; text-align: center; margin: auto 0; }
+
+  .leyenda { display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0 22px; font-size: .85rem; color: #5b6661; }
+  .muestra { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; }
+  .muestra.libre { border: 1px solid #1f5f3e; background: #fff; }
+  .muestra.cita { background: #1f5f3e; }
+  .muestra.ausencia { border: 1px dashed #a23b2c; background: #fff; }
+  .muestra.feriado { border: 1px dashed #6b7570; background: #fff; }
+  .muestra.pasado { background: #f3f5f4; border: 1px solid #e3e8e5; }
+
+  .fila-ausencia { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0;
+                   border-bottom: 1px solid #eef2f0; flex-wrap: wrap; }
+  .fila-ausencia:last-child { border-bottom: none; padding-bottom: 0; }
+  details.caja summary { cursor: pointer; font-weight: 700; color: #184c32; }
+  details[open].caja summary { margin-bottom: 12px; }
+  .form-linea { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end; }
+  .form-linea label { display: flex; flex-direction: column; gap: 6px; font-size: .85rem; font-weight: 600; color: #3d4843; }
+  .form-linea input { height: 40px; padding: 0 10px; border: 1px solid #cfd8d3; border-radius: 10px; font: inherit; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor">
+
+  <a class="volver" href="{% url 'citas:horarios' %}">← Todos los profesionales</a>
+
+  <div class="cabecera">
+    <div>
+      <h2>{{ personal.persona.nombre_completo }}</h2>
+      <div class="sub">
+        <span class="insignia area">{{ personal.area }}</span> {{ personal.cargo }}
+        {% if not activo %}<span class="insignia inactivo">Inactivo</span>{% endif %}
+      </div>
+    </div>
+    {% if activo %}
+      <div class="acciones">
+        <a class="boton" href="{% url 'citas:horarios_ausencia' personal.pk %}">Registrar ausencia</a>
+        <a class="boton primario" href="{% url 'citas:horarios_generar' %}?personal={{ personal.pk }}">+ Generar turnos</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="barra-semana">
+    <div class="navegacion">
+      <a class="boton chico" href="?semana={{ semana_anterior|date:'Y-m-d' }}" aria-label="Semana anterior">‹</a>
+      <span class="rango">{{ lunes|date:"j \d\e F" }} – {{ viernes|date:"j \d\e F \d\e Y" }}</span>
+      <a class="boton chico" href="?semana={{ semana_siguiente|date:'Y-m-d' }}" aria-label="Semana siguiente">›</a>
+      {% if lunes != semana_actual %}<a class="boton chico" href="?">Esta semana</a>{% endif %}
+    </div>
+    <div class="resumen-semana">
+      <span class="dato"><strong>{{ resumen.total }}</strong> turnos</span>
+      <span class="dato"><strong>{{ resumen.citas }}</strong> con cita</span>
+      <span class="dato"><strong>{{ resumen.libres }}</strong> libres</span>
+      {% if resumen.bloqueados %}<span class="dato rojo"><strong>{{ resumen.bloqueados }}</strong> bloqueados</span>{% endif %}
+    </div>
+  </div>
+
+  <div class="calendario-scroll">
+    <div class="calendario">
+      {% for dia in dias %}
+        <div class="dia{% if dia.es_hoy %} hoy{% endif %}">
+          <div class="dia-titulo">
+            <strong>{{ dia.fecha|date:"l" }}</strong>
+            <span>{{ dia.fecha|date:"d/m" }}</span>
+          </div>
+
+          {% if dia.feriado %}
+            <div class="ausente feriado">Feriado<small>{{ dia.feriado.nombre }}</small></div>
+          {% endif %}
+
+          {% for a in dia.ausencias %}
+            <div class="ausente">
+              Ausente{% if not a.es_dia_completo %} {{ a.descripcion_horario }}{% endif %}
+              <small>{{ a.motivo }}</small>
+            </div>
+          {% endfor %}
+
+          {% for item in dia.items %}
+            {% if item.tipo == "pausa" %}
+              <div class="pausa">Pausa {{ item.desde|time:"H:i" }} – {{ item.hasta|time:"H:i" }}</div>
+            {% elif item.editable %}
+              <a class="turno libre" href="{% url 'citas:horarios_editar' item.h.pk %}" title="Editar o eliminar este turno">
+                {{ item.h.hora_inicio|time:"H:i" }} – {{ item.h.hora_fin|time:"H:i" }}
+              </a>
+            {% else %}
+              <span class="turno {{ item.estado }}" title="{% if item.cita %}Con cita: {{ item.cita.estudiante.persona.nombre_completo }}{% elif item.estado == 'feriado' %}Bloqueado por feriado{% elif item.estado == 'ausencia' %}Bloqueado por ausencia{% elif item.estado == 'pasado' %}Turno pasado{% else %}Libre. Tuvo citas canceladas; se conserva por el historial{% endif %}">
+                {{ item.h.hora_inicio|time:"H:i" }} – {{ item.h.hora_fin|time:"H:i" }}
+                {% if item.cita %}<small>{{ item.cita.estudiante.persona.nombre_corto }}</small>{% endif %}
+              </span>
+            {% endif %}
+          {% empty %}
+            {% if not dia.ausencias and not dia.feriado %}<div class="sin-turnos">Sin turnos</div>{% endif %}
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="leyenda">
+    <span><span class="muestra libre"></span>Libre (clic para editar)</span>
+    <span><span class="muestra cita"></span>Con cita</span>
+    <span><span class="muestra ausencia"></span>Bloqueado por ausencia</span>
+    <span><span class="muestra feriado"></span>Feriado</span>
+    <span><span class="muestra pasado"></span>Pasado</span>
+  </div>
+
+  <div class="caja">
+    <h3>Ausencias de esta semana</h3>
+    {% for a in ausencias %}
+      <div class="fila-ausencia">
+        <div>
+          <strong>{{ a.descripcion_fechas }}</strong> · {{ a.descripcion_horario }}
+          <div class="tenue">
+            {{ a.motivo }} · Registrada por {{ a.registrada_por.get_full_name }} el {{ a.fecha_registro|date:"d/m/Y H:i" }}
+          </div>
+        </div>
+        <form method="post" action="{% url 'citas:horarios_eliminar_ausencia' a.pk %}"
+              onsubmit="return confirm('¿Eliminar esta ausencia? Los turnos volverán a estar disponibles. Las citas que se cancelaron no se restauran.');">
+          {% csrf_token %}
+          <input type="hidden" name="semana" value="{{ lunes|date:'Y-m-d' }}">
+          <button type="submit" class="boton chico peligro">Eliminar</button>
+        </form>
+      </div>
+    {% empty %}
+      <p class="tenue" style="margin:0">No hay ausencias registradas en esta semana.</p>
+    {% endfor %}
+  </div>
+
+  <details class="caja">
+    <summary>Corregir turnos de varios días</summary>
+    <p class="tenue">
+      Quita todos los turnos <strong>libres</strong> del profesional en un rango de fechas (por ejemplo, si se
+      generaron con la duración equivocada) y luego vuelve a generarlos. Los turnos con citas o ya pasados no se tocan.
+    </p>
+    <form method="post" action="{% url 'citas:horarios_quitar' personal.pk %}" class="form-linea"
+          onsubmit="return confirm('¿Quitar todos los turnos libres de ese rango?');">
+      {% csrf_token %}
+      <label>Desde <input type="date" name="desde" value="{{ lunes|date:'Y-m-d' }}" required></label>
+      <label>Hasta <input type="date" name="hasta" value="{{ viernes|date:'Y-m-d' }}" required></label>
+      <button type="submit" class="boton peligro">Quitar turnos libres</button>
+    </form>
+  </details>
+
+</div>
+{% endblock %}

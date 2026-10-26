@@ -1,0 +1,100 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Horarios{% endblock %}
+{% block titulo_pagina %}Horarios de atención{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+<style>
+  .cabecera { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+  .cabecera h2 { margin: 0; color: #184c32; font-size: 1.3rem; }
+  .cabecera p { margin: 4px 0 0; color: #5b6661; }
+  .seccion-titulo { font-size: .8rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #5b6661; margin: 28px 0 12px; }
+
+  .rejilla-prof { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .prof { display: flex; flex-direction: column; gap: 14px; background: #fff; border: 1px solid #e3e8e5; border-radius: 14px;
+          padding: 20px; text-decoration: none; color: inherit; transition: border-color .15s, box-shadow .15s; }
+  .prof:hover { border-color: #1f5f3e; box-shadow: 0 4px 14px rgba(24, 76, 50, .08); }
+  .prof .encabezado { display: flex; gap: 12px; align-items: center; }
+  .prof .iniciales { width: 44px; height: 44px; border-radius: 50%; background: #1f5f3e; color: #fff; font-weight: 700;
+                     display: grid; place-items: center; flex-shrink: 0; }
+  .prof.inactivo .iniciales { background: #6b7570; }
+  .prof .nombre { font-weight: 700; color: #1f2a25; }
+  .prof .cargo { font-size: .88rem; color: #5b6661; }
+  .cifras { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; border-top: 1px solid #eef2f0; padding-top: 12px; }
+  .cifras div { text-align: center; }
+  .cifras strong { display: block; font-size: 1.25rem; color: #184c32; }
+  .cifras span { font-size: .76rem; color: #5b6661; }
+  .aviso-ausencia { font-size: .85rem; font-weight: 600; color: #a23b2c; }
+  .ver { font-size: .88rem; font-weight: 600; color: #1f5f3e; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor">
+
+  <div class="cabecera">
+    <div>
+      <h2>Profesionales de Bienestar</h2>
+      <p>Semana del {{ lunes|date:"j \d\e F" }} al {{ viernes|date:"j \d\e F" }}. Elige un profesional para ver su calendario.</p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <a href="{% url 'citas:horarios_feriados' %}" class="boton">Feriados</a>
+      <a href="{% url 'citas:horarios_generar' %}" class="boton primario">+ Generar turnos</a>
+    </div>
+  </div>
+
+  <div class="rejilla-prof">
+    {% for p in activos %}
+      <a class="prof" href="{% url 'citas:horarios_calendario' p.pk %}">
+        <div class="encabezado">
+          <div class="iniciales">{{ p.persona.nombres|first|upper }}{{ p.persona.apellidos|first|upper }}</div>
+          <div>
+            <div class="nombre">{{ p.persona.nombre_corto }}</div>
+            <div class="cargo">{{ p.cargo }}</div>
+          </div>
+        </div>
+        <div><span class="insignia area">{{ p.area }}</span></div>
+        <div class="cifras">
+          <div><strong>{{ p.turnos_semana }}</strong><span>Turnos esta semana</span></div>
+          <div><strong>{{ p.citas_semana }}</strong><span>Con cita</span></div>
+          <div><strong>{{ p.turnos_futuros }}</strong><span>Turnos desde hoy</span></div>
+        </div>
+        {% with a=p.ausencias_vigentes.0 %}
+          {% if a %}
+            <div class="aviso-ausencia">
+              {% if a.fecha_desde <= hoy %}Ausente hoy{% else %}Próxima ausencia: {{ a.descripcion_fechas }}{% endif %}
+              · {{ a.descripcion_horario }}
+            </div>
+          {% endif %}
+        {% endwith %}
+        <span class="ver">Ver calendario →</span>
+      </a>
+    {% empty %}
+      <div class="caja tenue">
+        Aún no hay personal de atención activo. Créalo desde <a href="{% url 'usuarios:lista' %}">Usuarios</a>.
+      </div>
+    {% endfor %}
+  </div>
+
+  {% if inactivos %}
+    <div class="seccion-titulo">Personal inactivo (no recibe nuevas citas)</div>
+    <div class="rejilla-prof">
+      {% for p in inactivos %}
+        <a class="prof inactivo" href="{% url 'citas:horarios_calendario' p.pk %}">
+          <div class="encabezado">
+            <div class="iniciales">{{ p.persona.nombres|first|upper }}{{ p.persona.apellidos|first|upper }}</div>
+            <div>
+              <div class="nombre">{{ p.persona.nombre_corto }}</div>
+              <div class="cargo">{{ p.cargo }}</div>
+            </div>
+          </div>
+          <div><span class="insignia area">{{ p.area }}</span> <span class="insignia inactivo">Inactivo</span></div>
+          <span class="ver">Ver historial →</span>
+        </a>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

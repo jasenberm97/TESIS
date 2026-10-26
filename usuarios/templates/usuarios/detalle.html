@@ -114,7 +114,15 @@
           <dt>Carrera</dt><dd>{{ registro.carrera }}</dd>
           <dt>Semestre</dt><dd>{{ registro.semestre }}.º</dd>
           <dt>Estado académico</dt><dd>{{ registro.get_estado_academico_display }}</dd>
-          <dt>Consentimiento de datos</dt><dd>{{ registro.fecha_consentimiento|date:"d/m/Y H:i"|default:"No registrado" }}</dd>
+          <dt>Consentimiento de datos</dt>
+          <dd>
+            {% if registro.fecha_consentimiento %}
+              Aceptado el {{ registro.fecha_consentimiento|date:"d/m/Y H:i" }}
+            {% else %}
+              <span style="color:#7a5a00">Pendiente</span>
+              <div style="font-weight:400; font-size:.82rem; color:#6b7570">Cuenta creada antes del registro de consentimiento</div>
+            {% endif %}
+          </dd>
         </dl>
       </div>
     {% endif %}

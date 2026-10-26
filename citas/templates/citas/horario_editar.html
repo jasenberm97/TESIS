@@ -1,0 +1,67 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Editar turno{% endblock %}
+{% block titulo_pagina %}Horarios de atención{% endblock %}
+
+{% block estilos %}
+{% include "usuarios/_estilos_formulario.html" %}
+<style>
+  .boton.peligro { background: #fff; color: #a23b2c; border-color: #a23b2c; }
+  .boton.peligro:hover { background: #a23b2c; color: #fff; }
+  .fila-peligro { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .fila-peligro p { margin: 0; color: #5b6661; font-size: .9rem; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="formulario">
+
+  <div class="encabezado-form">
+    <h2>Editar turno</h2>
+    <a href="{{ volver }}" class="volver">← Volver al calendario</a>
+  </div>
+
+  <div class="nota">
+    <strong>{{ horario.personal.persona.nombre_completo }}</strong> — {{ horario.personal.area }}<br>
+    Turno actual: {{ original.fecha|date:"l"|capfirst }} {{ original.fecha|date:"d/m/Y" }},
+    {{ original.inicio|time:"H:i" }} – {{ original.fin|time:"H:i" }}
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="alerta-error">{% for e in form.non_field_errors %}{{ e }} {% endfor %}</div>
+  {% elif form.errors %}
+    <div class="alerta-error">Revisa los campos marcados.</div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="seccion-form">
+      <h3>Nuevo horario del turno</h3>
+      <p class="descripcion">De lunes a viernes, entre las 08:00 y las 16:30, sin cruzarse con otros turnos del profesional.</p>
+      <div class="rejilla">
+        {% include "usuarios/_campo.html" with campo=form.fecha %}
+        <div></div>
+        {% include "usuarios/_campo.html" with campo=form.hora_inicio %}
+        {% include "usuarios/_campo.html" with campo=form.hora_fin %}
+      </div>
+    </div>
+    <div class="acciones-form" style="margin-bottom:20px">
+      <a href="{{ volver }}" class="boton secundario">Cancelar</a>
+      <button type="submit" class="boton primario">Guardar cambios</button>
+    </div>
+  </form>
+
+  <div class="seccion-form">
+    <h3>Eliminar turno</h3>
+    <div class="fila-peligro">
+      <p>El turno no tiene citas, así que se puede eliminar sin afectar a nadie.</p>
+      <form method="post" action="{% url 'citas:horarios_eliminar' horario.pk %}"
+            onsubmit="return confirm('¿Eliminar este turno?');">
+        {% csrf_token %}
+        <button type="submit" class="boton peligro">Eliminar turno</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

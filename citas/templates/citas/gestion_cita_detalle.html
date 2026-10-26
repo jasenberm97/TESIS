@@ -1,0 +1,123 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Detalle de cita{% endblock %}
+{% block titulo_pagina %}Citas{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+<style>
+  .contenedor { max-width: 960px; }
+  .cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .cabecera h2 { margin: 0; color: #184c32; font-size: 1.3rem; }
+  .acciones { display: flex; gap: 10px; flex-wrap: wrap; }
+  .columnas { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .columnas .caja { margin-bottom: 0; }
+  dl.datos { display: grid; grid-template-columns: 120px 1fr; gap: 10px 14px; margin: 0; }
+  dl.datos dt { color: #5b6661; font-weight: 600; font-size: .88rem; }
+  dl.datos dd { margin: 0; color: #1f2a25; }
+  .cancelacion { background: #fff; border: 1px solid #e3e8e5; border-left: 5px solid #a23b2c; padding: 14px 18px; margin-top: 20px; }
+  .cancelacion h3 { margin: 0 0 8px; color: #a23b2c; font-size: 1rem; }
+  .confidencial { font-size: .84rem; color: #6b7570; margin-top: 14px; }
+
+  .linea-tiempo { list-style: none; margin: 0; padding: 0; }
+  .linea-tiempo li { position: relative; padding: 0 0 18px 26px; border-left: 2px solid #e3e8e5; margin-left: 8px; }
+  .linea-tiempo li:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .linea-tiempo li::before { content: ""; position: absolute; left: -7px; top: 3px; width: 12px; height: 12px; border-radius: 50%;
+                             background: #fff; border: 2px solid #6b7570; }
+  .linea-tiempo li.actual::before { background: #1f5f3e; border-color: #1f5f3e; }
+  .linea-tiempo .cuando { font-weight: 600; color: #1f2a25; }
+  .linea-tiempo .detalle-paso { color: #5b6661; font-size: .88rem; margin-top: 2px; }
+
+  .estado { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .76rem; font-weight: 600; white-space: nowrap; }
+  .estado.pendiente { border: 1px solid #1f5f3e; color: #1f5f3e; background: #fff; }
+  .estado.confirmada, .estado.atendida { background: #1f5f3e; color: #fff; }
+  .estado.cancelada { border: 1px solid #a23b2c; color: #a23b2c; background: #fff; }
+  .estado.no-asistio { background: #a23b2c; color: #fff; }
+  .estado.reprogramada { background: #6b7570; color: #fff; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor">
+
+  <a class="volver" href="{{ volver }}">← Volver a citas</a>
+
+  <div class="cabecera">
+    <h2>Cita del {{ cita.horario.fecha|date:"j \d\e F \d\e Y" }} <span class="estado {{ cita.estado.nombre|slugify }}">{{ cita.estado }}</span></h2>
+    {% if cita.estado.es_activo and not cita.horario.ya_paso %}
+      <div class="acciones">
+        <a class="boton" href="{% url 'citas:agenda_reprogramar' cita.pk %}?volver={{ aqui|urlencode }}">Reprogramar</a>
+        <a class="boton peligro" href="{% url 'citas:agenda_cancelar' cita.pk %}?volver={{ aqui|urlencode }}">Cancelar</a>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="columnas">
+    <div class="caja">
+      <h3>Estudiante</h3>
+      <dl class="datos">
+        <dt>Nombre</dt><dd>{{ cita.estudiante.persona.nombre_completo }}</dd>
+        <dt>Cédula</dt><dd>{{ cita.estudiante.persona.usuario.cedula }}</dd>
+        <dt>Código</dt><dd>{{ cita.estudiante.codigo_estudiantil }}</dd>
+        <dt>Carrera</dt><dd>{{ cita.estudiante.carrera }}</dd>
+        <dt>Contacto</dt>
+        <dd>{% if cita.estudiante.persona.telefono %}{{ cita.estudiante.persona.telefono }}<br>{% endif %}{{ cita.estudiante.persona.usuario.email }}</dd>
+      </dl>
+      <p style="margin:14px 0 0"><a class="boton chico" href="{% url 'usuarios:detalle' cita.estudiante.persona.usuario.pk %}">Ver ficha del estudiante</a></p>
+    </div>
+
+    <div class="caja">
+      <h3>Cita</h3>
+      <dl class="datos">
+        <dt>Área</dt><dd>{{ cita.horario.personal.area }}</dd>
+        <dt>Profesional</dt><dd>{{ cita.horario.personal.persona.nombre_completo }}</dd>
+        <dt>Día</dt><dd>{{ cita.horario.fecha|date:"l j \d\e F \d\e Y"|capfirst }}</dd>
+        <dt>Hora</dt><dd>{{ cita.horario.hora_inicio|time:"H:i" }} – {{ cita.horario.hora_fin|time:"H:i" }}</dd>
+        <dt>Agendada el</dt><dd>{{ cita.fecha_registro|date:"d/m/Y H:i" }}</dd>
+      </dl>
+      <p class="confidencial">Por confidencialidad, el motivo de la consulta solo lo ve el profesional del área.</p>
+    </div>
+  </div>
+
+  {% if cita.cancelada_por %}
+    <div class="cancelacion">
+      <h3>{% if cita.estado.nombre == "Reprogramada" %}Reprogramación{% else %}Cancelación{% endif %}</h3>
+      <dl class="datos">
+        <dt>Por</dt>
+        <dd>
+          {% if cita.cancelada_por.rol == "ESTUDIANTE" %}El propio estudiante{% else %}{{ cita.cancelada_por.get_full_name }} ({{ cita.cancelada_por.perfil }}){% endif %}
+        </dd>
+        <dt>Fecha</dt><dd>{{ cita.fecha_cancelacion|date:"d/m/Y H:i" }}</dd>
+        <dt>Motivo</dt><dd>{{ cita.motivo_cancelacion }}</dd>
+        {% if cita.feriado %}<dt>Origen</dt><dd>Feriado: {{ cita.feriado.nombre }}</dd>{% endif %}
+        {% if cita.ausencia %}<dt>Origen</dt><dd>Ausencia del profesional ({{ cita.ausencia.descripcion_fechas }})</dd>{% endif %}
+      </dl>
+    </div>
+  {% endif %}
+
+  {% if historia|length > 1 %}
+    <div class="caja" style="margin-top:20px">
+      <h3>Historial de reprogramaciones</h3>
+      <ul class="linea-tiempo">
+        {% for paso in historia %}
+          <li class="{% if paso.pk == cita.pk %}actual{% endif %}">
+            <div class="cuando">
+              {% if paso.pk == cita.pk %}
+                {{ paso.horario.fecha|date:"d/m/Y" }} · {{ paso.horario.hora_inicio|time:"H:i" }}
+              {% else %}
+                <a href="{% url 'citas:gestion_cita_detalle' paso.pk %}?volver={{ volver|urlencode }}">{{ paso.horario.fecha|date:"d/m/Y" }} · {{ paso.horario.hora_inicio|time:"H:i" }}</a>
+              {% endif %}
+              <span class="estado {{ paso.estado.nombre|slugify }}">{{ paso.estado }}</span>
+            </div>
+            <div class="detalle-paso">
+              {% if forloop.first %}Cita original, agendada el {{ paso.fecha_registro|date:"d/m/Y H:i" }}.{% endif %}
+              {% if paso.motivo_cancelacion %}{{ paso.motivo_cancelacion }}{% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

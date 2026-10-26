@@ -1,0 +1,49 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Cita agendada{% endblock %}
+{% block titulo_pagina %}Agendar cita{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+<style>
+  .exito { max-width: 620px; margin: 0 auto; text-align: center; }
+  .exito .check { width: 64px; height: 64px; border-radius: 50%; background: #1f5f3e; color: #fff;
+                  display: grid; place-items: center; margin: 0 auto 14px; }
+  .exito .check svg { width: 34px; height: 34px; }
+  .exito h2 { margin: 0 0 6px; color: #184c32; }
+  .exito > p { margin: 0 0 20px; color: #5b6661; }
+  .detalle { text-align: left; display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; margin: 0; }
+  .detalle dt { color: #5b6661; font-weight: 600; font-size: .9rem; }
+  .detalle dd { margin: 0; color: #1f2a25; font-weight: 600; }
+  .aviso { text-align: left; color: #3d4843; font-size: .9rem; margin-top: 16px; padding-top: 14px; border-top: 1px solid #eef2f0; }
+  .botones { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="exito">
+  <div class="check">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5 9-10"/></svg>
+  </div>
+  <h2>Tu cita quedó agendada</h2>
+  <p>Te esperamos en Bienestar Universitario.</p>
+
+  <div class="caja">
+    <dl class="detalle">
+      <dt>Área</dt><dd>{{ cita.horario.personal.area }}</dd>
+      <dt>Profesional</dt><dd>{{ cita.horario.personal.persona.nombre_completo }}</dd>
+      <dt>Día</dt><dd>{{ cita.horario.fecha|date:"l j \d\e F \d\e Y"|capfirst }}</dd>
+      <dt>Hora</dt><dd>{{ cita.horario.hora_inicio|time:"H:i" }} – {{ cita.horario.hora_fin|time:"H:i" }}</dd>
+      <dt>Motivo</dt><dd>{{ cita.motivo }}</dd>
+    </dl>
+    <div class="aviso">
+      Puedes cancelarla hasta el <strong>{{ cita.limite_cancelacion_estudiante|date:"l j \d\e F, H:i" }}</strong>.
+    </div>
+  </div>
+
+  <div class="botones">
+    <a href="{% url 'citas:agendar' %}" class="boton">Agendar en otra área</a>
+    <a href="{% url 'citas:mis_citas' %}" class="boton primario">Ver mis citas</a>
+  </div>
+</div>
+{% endblock %}

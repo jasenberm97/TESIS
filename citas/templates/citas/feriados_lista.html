@@ -1,0 +1,86 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Feriados{% endblock %}
+{% block titulo_pagina %}Horarios de atención{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+<style>
+  .cabecera { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .cabecera h2 { margin: 0; color: #184c32; font-size: 1.3rem; }
+  .anios { display: flex; align-items: center; gap: 8px; }
+  .anios strong { font-size: 1.1rem; color: #1f2a25; padding: 0 6px; }
+  .nota { background: #fff; border: 1px solid #e3e8e5; border-left: 5px solid #1f5f3e; border-radius: 0;
+          padding: 14px 18px; color: #3d4843; font-size: .92rem; margin-bottom: 20px; }
+
+  .tabla-caja { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; overflow: hidden; }
+  .tabla-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 700px; }
+  th { text-align: left; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: #5b6661;
+       background: #f7f9f8; padding: 12px 18px; border-bottom: 1px solid #e3e8e5; }
+  td { padding: 14px 18px; border-bottom: 1px solid #eef2f0; color: #1f2a25; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr.pasado td { color: #8a948f; }
+  .vacio { padding: 40px 20px; text-align: center; color: #5b6661; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor">
+
+  <a class="volver" href="{% url 'citas:horarios' %}">← Volver a horarios</a>
+
+  <div class="cabecera">
+    <h2>Feriados y días no laborables</h2>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <div class="anios">
+        <a class="boton chico" href="?anio={{ anio_anterior }}" aria-label="Año anterior">‹</a>
+        <strong>{{ anio }}</strong>
+        <a class="boton chico" href="?anio={{ anio_siguiente }}" aria-label="Año siguiente">›</a>
+      </div>
+      <a href="{% url 'citas:horarios_feriado_nuevo' %}" class="boton primario">+ Registrar feriado</a>
+    </div>
+  </div>
+
+  <div class="nota">
+    Un feriado bloquea el día para <strong>todos</strong> los profesionales: no se generan turnos y los estudiantes no
+    pueden agendar. Registra al inicio de cada año los feriados nacionales con las fechas de traslado que publique
+    el Gobierno, los locales de Guayaquil y los días propios de la universidad.
+  </div>
+
+  <div class="tabla-caja">
+    <div class="tabla-scroll">
+      <table>
+        <thead>
+          <tr><th>Fecha</th><th>Nombre</th><th>Citas canceladas</th><th>Registrado por</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for f in feriados %}
+            <tr class="{% if f.fecha < hoy %}pasado{% endif %}">
+              <td>
+                <strong>{{ f.fecha|date:"l"|capfirst }}</strong>
+                <div class="tenue">{{ f.fecha|date:"d \d\e F" }}</div>
+              </td>
+              <td>{{ f.nombre }}</td>
+              <td>{{ f.canceladas }}</td>
+              <td class="tenue">{{ f.registrado_por.get_full_name }}</td>
+              <td>
+                {% if f.fecha >= hoy %}
+                  <form method="post" action="{% url 'citas:horarios_eliminar_feriado' f.pk %}"
+                        onsubmit="return confirm('¿Eliminar el feriado del {{ f.fecha|date:'d/m/Y' }}? Los turnos de ese día volverán a estar disponibles.');">
+                    {% csrf_token %}
+                    <button type="submit" class="boton chico peligro">Eliminar</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="5" class="vacio">No hay feriados registrados en {{ anio }}.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

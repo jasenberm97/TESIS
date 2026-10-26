@@ -50,7 +50,7 @@
 
   <h2>3. Para qué usamos tus datos</h2>
   <ul>
-    <li>Crear tu cuenta y permitirte agendar, cancelar o reprogramar citas.</li>
+    <li>Crear tu cuenta y permitirte agendar y cancelar citas.</li>
     <li>Brindarte atención médica, odontológica y psicológica, y llevar tu historia clínica.</li>
     <li>Emitir recetas, órdenes de exámenes y certificados médicos.</li>
     <li>Gestionar adaptaciones académicas por NEE. Esto se hace solo si das un consentimiento adicional y específico.</li>
@@ -97,7 +97,12 @@
     escribe a: <strong>[correo de contacto por definir]</strong>.
   </p>
 
-  <a class="volver" href="{% url 'estudiantes:registro' %}">Volver al registro</a>
+  {% if user.is_authenticated %}
+    <a class="volver" href="{% url 'principal:panel' %}">Volver al inicio</a>
+  {% else %}
+    <a class="volver" href="{% url 'estudiantes:registro' %}"
+       onclick="if (history.length <= 1) { window.close(); return false; }">Volver al registro</a>
+  {% endif %}
 </main>
 </body>
 </html>
