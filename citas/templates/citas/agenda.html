@@ -103,10 +103,14 @@
         <div class="fila-p">
           <span><strong>{{ c.horario.fecha|date:"d/m" }} {{ c.horario.hora_inicio|time:"H:i" }}</strong> · {{ c.estudiante.persona.nombre_completo }}</span>
           <span style="display:flex; gap:6px;">
-            <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}" style="margin:0">
-              {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="1">
-              <button type="submit" class="boton chico primario">Atendida</button>
-            </form>
+            {% if es_medicina %}
+              <a class="boton chico primario" href="{% url 'medicina:atender' c.pk %}">Atender</a>
+            {% else %}
+              <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}" style="margin:0">
+                {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="1">
+                <button type="submit" class="boton chico primario">Atendida</button>
+              </form>
+            {% endif %}
             <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}" style="margin:0">
               {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="0">
               <button type="submit" class="boton chico peligro">No asistió</button>
@@ -151,13 +155,22 @@
                   <div class="datos">
                     {% if c.estudiante.persona.telefono %}Cel. {{ c.estudiante.persona.telefono }} · {% endif %}{{ c.estudiante.persona.usuario.email }}
                   </div>
-                  {% if c.estado.es_activo %}
+
+                  {% if es_medicina and c.consulta_medica %}
+                    <div class="acciones">
+                      <a class="boton chico primario" href="{% url 'medicina:consulta_detalle' c.consulta_medica.pk %}">Ver consulta</a>
+                    </div>
+                  {% elif c.estado.es_activo %}
                     <div class="acciones">
                       {% if item.empezo %}
-                        <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}">
-                          {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="1">
-                          <button type="submit" class="boton chico primario">Atendida</button>
-                        </form>
+                        {% if es_medicina %}
+                          <a class="boton chico primario" href="{% url 'medicina:atender' c.pk %}">Atender</a>
+                        {% else %}
+                          <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}">
+                            {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="1">
+                            <button type="submit" class="boton chico primario">Atendida</button>
+                          </form>
+                        {% endif %}
                         <form method="post" action="{% url 'citas:agenda_asistencia' c.pk %}"
                               onsubmit="return confirm('¿Marcar que {{ c.estudiante.persona.nombre_corto }} no asistió?');">
                           {% csrf_token %}<input type="hidden" name="volver" value="{{ volver }}"><input type="hidden" name="asistio" value="0">
@@ -167,6 +180,10 @@
                         <a class="boton chico" href="{% url 'citas:agenda_reprogramar' c.pk %}?volver={{ volver|urlencode }}">Reprogramar</a>
                         <a class="boton chico peligro" href="{% url 'citas:agenda_cancelar' c.pk %}?volver={{ volver|urlencode }}">Cancelar</a>
                       {% endif %}
+                    </div>
+                  {% elif es_medicina and c.estado.nombre == "Atendida" %}
+                    <div class="acciones">
+                      <a class="boton chico" href="{% url 'medicina:atender' c.pk %}">Registrar consulta</a>
                     </div>
                   {% endif %}
                 </div>

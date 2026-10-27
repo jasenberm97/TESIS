@@ -1,0 +1,61 @@
+<style>
+  .contenedor-m { max-width: 1120px; }
+  .encabezado-m { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .encabezado-m h2 { margin: 0; color: #184c32; font-size: 1.3rem; }
+  .encabezado-m .sub { color: #5b6661; margin-top: 2px; }
+  .encabezado-m .sub::first-letter { text-transform: uppercase; }
+
+  .rejilla-m { display: grid; grid-template-columns: 300px 1fr; gap: 18px; align-items: start; }
+  .panel-m { background: #fff; border: 1px solid #e3e8e5; border-radius: 14px; padding: 16px 18px; }
+  .panel-m + .panel-m { margin-top: 14px; }
+  .panel-m h3 { margin: 0 0 12px; color: #184c32; font-size: 1rem; }
+
+  .paciente-nombre { font-weight: 700; color: #1f2a25; font-size: 1.05rem; }
+  .ficha { margin: 0; }
+  .ficha dt { font-size: .76rem; color: #6b7570; margin-top: 8px; text-transform: uppercase; letter-spacing: .02em; }
+  .ficha dd { margin: 2px 0 0; color: #1f2a25; white-space: pre-line; }
+  .alerta-alergia { border: 1px solid #a23b2c; color: #a23b2c; border-radius: 10px; padding: 8px 12px; font-weight: 600; margin-bottom: 6px; white-space: pre-line; }
+  .nota-m { color: #6b7570; font-size: .88rem; margin: 0; }
+
+  .historial-m { display: flex; flex-direction: column; gap: 6px; }
+  .historial-m a { display: block; border: 1px solid #e3e8e5; border-radius: 10px; padding: 8px 10px; text-decoration: none; color: #3d4843; font-size: .86rem; }
+  .historial-m a:hover { border-color: #1f5f3e; }
+  .historial-m strong { display: block; color: #184c32; }
+
+  .campo-m + .campo-m { margin-top: 12px; }
+  .campo-m label { display: block; font-weight: 600; font-size: .86rem; color: #3d4843; margin-bottom: 4px; }
+  .campo-m .req { color: #a23b2c; }
+  .campo-m input, .campo-m textarea, .campo-m select {
+    width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cfd8d3; border-radius: 10px;
+    font: inherit; background: #fff; color: #1f2a25;
+  }
+  .campo-m textarea { resize: vertical; }
+  .campo-m input:focus, .campo-m textarea:focus, .campo-m select:focus { outline: none; border-color: #1f5f3e; box-shadow: 0 0 0 3px rgba(31, 95, 62, .15); }
+  .campo-m .ayuda { font-size: .78rem; color: #6b7570; margin-top: 3px; }
+  .campo-m .error { font-size: .8rem; color: #a23b2c; margin-top: 3px; }
+  .campo-m.con-error input, .campo-m.con-error textarea { border-color: #a23b2c; }
+
+  .campos-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 14px; }
+  .campos-4 .campo-m + .campo-m { margin-top: 0; }
+  .imc { margin-top: 12px; padding: 8px 12px; border-radius: 10px; background: #f4f7f5; color: #184c32; font-weight: 600; font-size: .9rem; }
+
+  .error-general { background: #fff; border: 1px solid #a23b2c; color: #a23b2c; border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; font-weight: 600; }
+  .acciones-m { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; margin-top: 16px; }
+
+  .valor { white-space: pre-line; color: #1f2a25; margin: 0; }
+  .valor.vacio { color: #8a948f; font-style: italic; }
+  .signos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .signo { border: 1px solid #e3e8e5; border-radius: 10px; padding: 8px 10px; }
+  .signo span { display: block; font-size: .74rem; color: #6b7570; }
+  .signo strong { color: #1f2a25; }
+  .insignia-m { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: .78rem; font-weight: 600; border: 1px solid #1f5f3e; color: #1f5f3e; background: #fff; }
+  .insignia-m.emergencia { background: #a23b2c; border-color: #a23b2c; color: #fff; }
+  .nota-aclaratoria { border-left: 4px solid #1f5f3e; padding: 6px 12px; }
+  .nota-aclaratoria + .nota-aclaratoria { margin-top: 10px; }
+  .nota-aclaratoria small { color: #6b7570; display: block; margin-bottom: 2px; }
+
+  @media (max-width: 900px) {
+    .rejilla-m { grid-template-columns: 1fr; }
+    .campos-4, .signos { grid-template-columns: 1fr 1fr; }
+  }
+</style>

@@ -1,0 +1,49 @@
+<div class="panel-m">
+  <h3>Paciente</h3>
+  <div class="paciente-nombre">{{ estudiante.persona.nombre_completo }}</div>
+  <dl class="ficha">
+    <dt>Código</dt><dd>{{ estudiante.codigo_estudiantil }}</dd>
+    <dt>Cédula</dt><dd>{{ estudiante.persona.usuario.cedula }}</dd>
+    <dt>Edad y sexo</dt>
+    <dd>{% if edad is not None %}{{ edad }} años{% endif %}{% if estudiante.persona.get_sexo_display %} · {{ estudiante.persona.get_sexo_display }}{% endif %}</dd>
+    <dt>Carrera</dt><dd>{{ estudiante.carrera }} · {{ estudiante.semestre }}.º semestre</dd>
+    <dt>Contacto</dt>
+    <dd>{% if estudiante.persona.telefono %}{{ estudiante.persona.telefono }}<br>{% endif %}{{ estudiante.persona.usuario.email }}</dd>
+  </dl>
+</div>
+
+<div class="panel-m">
+  <h3>Antecedentes</h3>
+  {% if antecedentes %}
+    {% if antecedentes.alergias %}
+      <div class="alerta-alergia">Alergias: {{ antecedentes.alergias }}</div>
+    {% else %}
+      <p class="nota-m">No refiere alergias.</p>
+    {% endif %}
+    <dl class="ficha">
+      {% if antecedentes.tipo_sangre %}<dt>Tipo de sangre</dt><dd>{{ antecedentes.tipo_sangre }}</dd>{% endif %}
+      {% if antecedentes.personales %}<dt>Personales</dt><dd>{{ antecedentes.personales }}</dd>{% endif %}
+      {% if antecedentes.quirurgicos %}<dt>Quirúrgicos</dt><dd>{{ antecedentes.quirurgicos }}</dd>{% endif %}
+      {% if antecedentes.familiares %}<dt>Familiares</dt><dd>{{ antecedentes.familiares }}</dd>{% endif %}
+      {% if antecedentes.medicacion_habitual %}<dt>Medicación habitual</dt><dd>{{ antecedentes.medicacion_habitual }}</dd>{% endif %}
+      {% if antecedentes.habitos %}<dt>Hábitos</dt><dd>{{ antecedentes.habitos }}</dd>{% endif %}
+      {% if antecedentes.gineco_obstetricos %}<dt>Gineco-obstétricos</dt><dd>{{ antecedentes.gineco_obstetricos }}</dd>{% endif %}
+    </dl>
+  {% else %}
+    <p class="nota-m">Aún no hay antecedentes registrados para este paciente.</p>
+  {% endif %}
+</div>
+
+<div class="panel-m">
+  <h3>Consultas anteriores</h3>
+  <div class="historial-m">
+    {% for c in anteriores %}
+      <a href="{% url 'medicina:consulta_detalle' c.pk %}">
+        <strong>{{ c.fecha_atencion|date:"d/m/Y" }}</strong>
+        {{ c.diagnostico|truncatechars:70 }}
+      </a>
+    {% empty %}
+      <p class="nota-m">No tiene consultas médicas anteriores.</p>
+    {% endfor %}
+  </div>
+</div>

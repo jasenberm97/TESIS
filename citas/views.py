@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 from usuarios.grupos import GRUPO_ADMINISTRADOR, GRUPO_ESTUDIANTE, GRUPOS_POR_AREA
 from usuarios.models import Area, Personal
 from usuarios.permisos import perfil_requerido
+from usuarios.comun import AREA_MEDICINA
 
 from . import servicios
 from .forms import (
@@ -692,6 +693,7 @@ def _dia_habil(fecha, paso):
 @perfil_requerido(*GRUPOS_PERSONAL)
 def agenda(request):
     personal = _personal_actual(request)
+    es_medicina = personal.area.nombre == AREA_MEDICINA
     hoy = timezone.localdate()
     dia = _fecha(request.GET.get("dia"))
     if dia is None:
@@ -720,7 +722,9 @@ def agenda(request):
         .annotate(bloqueado=Exists(ausencia_del_turno()), en_feriado=Exists(feriado_del_turno()))
         .prefetch_related(Prefetch(
             "citas",
-            queryset=vigentes.select_related("estado", "estudiante__persona__usuario", "estudiante__carrera"),
+            queryset=vigentes.select_related(
+                "estado", "estudiante__persona__usuario", "estudiante__carrera", "consulta_medica",
+            ),
             to_attr="citas_vigentes",
         ))
         .order_by("hora_inicio")
@@ -758,6 +762,7 @@ def agenda(request):
 
     return render(request, "citas/agenda.html", {
         "personal": personal,
+        "es_medicina": es_medicina,
         "dia": dia,
         "hoy": hoy,
         "dia_anterior": _dia_habil(dia, -1),

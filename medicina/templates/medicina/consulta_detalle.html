@@ -1,0 +1,91 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Consulta médica{% endblock %}
+{% block titulo_pagina %}Consulta médica{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+{% include "medicina/_estilos_medicina.html" %}
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor-m">
+
+  <div class="encabezado-m">
+    <div>
+      <h2>Consulta del {{ consulta.fecha_atencion|date:"j \d\e F \d\e Y, H:i" }}</h2>
+      <div class="sub">
+        <span class="insignia-m{% if consulta.tipo == 'EMERGENCIA' %} emergencia{% endif %}">{{ consulta.get_tipo_display }}</span>
+        · Atendió: {{ consulta.personal.persona.nombre_completo }}
+      </div>
+    </div>
+    <a class="boton" href="{{ volver }}">Volver a Mi agenda</a>
+  </div>
+
+  <div class="rejilla-m">
+    <aside>
+      {% include "medicina/_paciente.html" %}
+    </aside>
+
+    <div>
+      <div class="panel-m">
+        <h3>Motivo de consulta</h3>
+        <p class="valor">{{ consulta.motivo_consulta }}</p>
+      </div>
+
+      <div class="panel-m">
+        <h3>Enfermedad actual</h3>
+        {% if consulta.anamnesis %}<p class="valor">{{ consulta.anamnesis }}</p>{% else %}<p class="valor vacio">No registrada.</p>{% endif %}
+      </div>
+
+      <div class="panel-m">
+        <h3>Signos vitales</h3>
+        {% if signos %}
+          <div class="signos">
+            {% for etiqueta, valor in signos %}
+              <div class="signo"><span>{{ etiqueta }}</span><strong>{{ valor }}</strong></div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="valor vacio">No se registraron signos vitales.</p>
+        {% endif %}
+      </div>
+
+      <div class="panel-m">
+        <h3>Examen físico</h3>
+        {% if consulta.examen_fisico %}<p class="valor">{{ consulta.examen_fisico }}</p>{% else %}<p class="valor vacio">No registrado.</p>{% endif %}
+      </div>
+
+      <div class="panel-m">
+        <h3>Diagnóstico</h3>
+        <p class="valor">{{ consulta.diagnostico }}</p>
+      </div>
+
+      <div class="panel-m">
+        <h3>Indicaciones y observaciones</h3>
+        {% if consulta.observaciones %}<p class="valor">{{ consulta.observaciones }}</p>{% else %}<p class="valor vacio">Sin indicaciones adicionales.</p>{% endif %}
+      </div>
+
+      {% if consulta.derivacion %}
+        <div class="panel-m">
+          <h3>Derivación</h3>
+          <p class="valor">{{ consulta.derivacion }}</p>
+        </div>
+      {% endif %}
+
+      <div class="panel-m">
+        <h3>Notas aclaratorias</h3>
+        {% for n in notas %}
+          <div class="nota-aclaratoria">
+            <small>{{ n.fecha_registro|date:"d/m/Y H:i" }} · {{ n.registrada_por.persona.nombre_completo }}</small>
+            <p class="valor">{{ n.texto }}</p>
+          </div>
+        {% empty %}
+          <p class="valor vacio">No hay notas aclaratorias.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
