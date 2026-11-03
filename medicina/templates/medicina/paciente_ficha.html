@@ -1,0 +1,91 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Ficha del paciente{% endblock %}
+{% block titulo_pagina %}Pacientes{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+{% include "medicina/_estilos_medicina.html" %}
+<style>
+  .botones-m { display: flex; gap: 8px; flex-wrap: wrap; }
+  .resumen-ficha { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .resumen-ficha .dato { border: 1px solid #e3e8e5; background: #fff; border-radius: 999px; padding: 5px 12px; font-size: .85rem; color: #3d4843; }
+  .resumen-ficha .dato strong { color: #184c32; }
+
+  .dia-h { position: relative; padding-left: 22px; border-left: 2px solid #d6e3db; margin-left: 6px; padding-bottom: 18px; }
+  .dia-h:last-child { padding-bottom: 0; }
+  .dia-h::before { content: ""; position: absolute; left: -7px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: #1f5f3e; }
+  .dia-fecha { font-weight: 700; color: #184c32; margin-bottom: 8px; }
+  .dia-fecha::first-letter { text-transform: uppercase; }
+  .atencion-h { display: block; border: 1px solid #e3e8e5; border-radius: 12px; padding: 12px 14px; text-decoration: none; color: #3d4843; font-size: .9rem; }
+  .atencion-h + .atencion-h { margin-top: 8px; }
+  .atencion-h:hover { border-color: #1f5f3e; box-shadow: 0 1px 4px rgba(31, 95, 62, .12); }
+  .atencion-h .arriba-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+  .atencion-h .hora-h { font-weight: 700; color: #1f2a25; }
+  .atencion-h .medico-h { color: #6b7570; font-size: .82rem; margin-left: auto; }
+  .atencion-h p { margin: 2px 0; }
+  .atencion-h .notas-h { margin-top: 6px; font-size: .8rem; color: #7a5a00; }
+  .inactiva { background: #6b7570; color: #fff; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor-m">
+
+  <div class="encabezado-m">
+    <div>
+      <h2>{{ estudiante.persona.nombre_completo }}</h2>
+      <div class="sub">Ficha e historial de Medicina</div>
+    </div>
+    <div class="botones-m">
+      {% if activo %}
+        <a class="boton primario" href="{% url 'medicina:atender_sin_cita' estudiante.pk %}?tipo=ESPONTANEA&volver={{ aqui|urlencode }}">Atención sin cita</a>
+        <a class="boton peligro" href="{% url 'medicina:atender_sin_cita' estudiante.pk %}?tipo=EMERGENCIA&volver={{ aqui|urlencode }}">Emergencia</a>
+      {% endif %}
+      <a class="boton" href="{% url 'medicina:pacientes' %}">Volver a Pacientes</a>
+    </div>
+  </div>
+
+  {% if not activo %}
+    <div class="inactiva">La cuenta de este estudiante está desactivada. Su historial se puede consultar, pero no se registran nuevas atenciones.</div>
+  {% endif %}
+
+  <div class="rejilla-m">
+    <aside>
+      {% include "medicina/_paciente.html" %}
+    </aside>
+
+    <div>
+      <div class="resumen-ficha">
+        <span class="dato"><strong>{{ total }}</strong> consulta{{ total|pluralize }}</span>
+        <span class="dato"><strong>{{ emergencias }}</strong> emergencia{{ emergencias|pluralize }}</span>
+        {% if ultima %}<span class="dato">Última atención: <strong>{{ ultima|date:"d/m/Y" }}</strong></span>{% endif %}
+      </div>
+
+      <div class="panel-m">
+        <h3>Historial de atenciones</h3>
+        {% for d in dias %}
+          <div class="dia-h">
+            <div class="dia-fecha">{{ d.fecha|date:"l j \d\e F \d\e Y" }}</div>
+            {% for c in d.consultas %}
+              <a class="atencion-h" href="{% url 'medicina:consulta_detalle' c.pk %}">
+                <div class="arriba-h">
+                  <span class="hora-h">{{ c.fecha_atencion|time:"H:i" }}</span>
+                  <span class="insignia-m{% if c.tipo == 'EMERGENCIA' %} emergencia{% endif %}">{{ c.get_tipo_display }}</span>
+                  <span class="medico-h">{{ c.personal.persona.nombre_completo }}</span>
+                </div>
+                <p><strong>Motivo:</strong> {{ c.motivo_consulta|truncatechars:120 }}</p>
+                <p><strong>Diagnóstico:</strong> {{ c.diagnostico|truncatechars:160 }}</p>
+                {% if c.n_notas %}<div class="notas-h">{{ c.n_notas }} nota{{ c.n_notas|pluralize }} aclaratoria{{ c.n_notas|pluralize }}</div>{% endif %}
+              </a>
+            {% endfor %}
+          </div>
+        {% empty %}
+          <p class="nota-m">Este paciente aún no tiene atenciones médicas.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

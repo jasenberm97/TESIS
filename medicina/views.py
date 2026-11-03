@@ -1,10 +1,14 @@
+from datetime import timedelta
+
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.core.paginator import Paginator
+from django.db.models import Count, Max, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
 from citas.models import Cita, EstadoCita
@@ -13,13 +17,15 @@ from usuarios.comun import AREA_MEDICINA
 from usuarios.permisos import perfil_requerido
 
 from . import servicios
-from .forms import TIPOS_SIN_CITA, ConsultaMedicaForm, ConsultaSinCitaForm, NotaAclaratoriaForm
+from .forms import (
+    TIPOS_SIN_CITA, AntecedentesForm, ConsultaMedicaForm, ConsultaSinCitaForm, NotaAclaratoriaForm,
+)
 from .models import AntecedentesMedicos, ConsultaMedica
-from django.utils.http import url_has_allowed_host_and_scheme
 
 # El grupo de permisos se llama igual que el área.
 GRUPO_MEDICINA = AREA_MEDICINA
 MAXIMO_RESULTADOS = 20
+DIAS_RECIENTES = 30
 
 
 # =====================================================================
@@ -45,7 +51,12 @@ def _contexto_paciente(estudiante, excluir=None):
     return {
         "estudiante": estudiante,
         "edad": _edad(estudiante.persona.fecha_nacimiento),
-        "antecedentes": AntecedentesMedicos.objects.filter(estudiante=estudiante).first(),
+        "antecedentes": (
+            AntecedentesMedicos.objects
+            .filter(estudiante=estudiante)
+            .select_related("actualizado_por__persona")
+            .first()
+        ),
         "anteriores": list(anteriores[:5]),
     }
 
@@ -55,10 +66,18 @@ def _url_agenda(fecha=None):
     return f"{url}?dia={fecha:%Y-%m-%d}" if fecha else url
 
 
+def _url_segura(request, url, defecto):
+    """Solo se aceptan direcciones del mismo sitio para volver después de una acción."""
+    if url and url_has_allowed_host_and_scheme(url, allowed_hosts={request.get_host()},
+                                               require_https=request.is_secure()):
+        return url
+    return defecto
+
+
 def _render_formulario(request, form, estudiante, excluir=None, **extra):
     """Un solo formulario para atender con cita, sin cita y editar."""
     contexto = _contexto_paciente(estudiante, excluir=excluir)
-    contexto.update(form=form, **extra)
+    contexto.update(form=form, en_formulario=True, **extra)
     return render(request, "medicina/consulta_form.html", contexto)
 
 
@@ -75,6 +94,31 @@ def _signos(c):
         ("IMC", f"{c.imc} · {c.clasificacion_imc}" if c.imc else None),
     ]
     return [(etiqueta, valor) for etiqueta, valor in filas if valor]
+
+
+def _buscar_estudiantes(q, solo_activos=True):
+    """Busca por nombres, apellidos, cédula o código. Cada palabra debe coincidir en algún campo."""
+    estudiantes = Estudiante.objects.select_related("persona__usuario", "carrera")
+    if solo_activos:
+        estudiantes = estudiantes.filter(persona__usuario__is_active=True)
+    for palabra in q.split():
+        estudiantes = estudiantes.filter(
+            Q(persona__nombres__icontains=palabra)
+            | Q(persona__apellidos__icontains=palabra)
+            | Q(persona__usuario__cedula__icontains=palabra)
+            | Q(codigo_estudiantil__icontains=palabra)
+        )
+    return estudiantes
+
+
+def _cita_pendiente_medicina(estudiante):
+    return (
+        Cita.objects
+        .filter(estudiante=estudiante, estado__es_activo=True, horario__personal__area__nombre=AREA_MEDICINA)
+        .select_related("horario")
+        .order_by("horario__fecha", "horario__hora_inicio")
+        .first()
+    )
 
 
 # =====================================================================
@@ -138,21 +182,10 @@ def buscar_paciente(request):
     servicios.medico_de(request.user)
     q = request.GET.get("q", "").strip()
     resultados = []
-
     if len(q) >= 3:
-        estudiantes = (
-            Estudiante.objects
-            .filter(persona__usuario__is_active=True)
-            .select_related("persona__usuario", "carrera")
+        resultados = list(
+            _buscar_estudiantes(q).order_by("persona__apellidos", "persona__nombres")[:MAXIMO_RESULTADOS]
         )
-        for palabra in q.split():
-            estudiantes = estudiantes.filter(
-                Q(persona__nombres__icontains=palabra)
-                | Q(persona__apellidos__icontains=palabra)
-                | Q(persona__usuario__cedula__icontains=palabra)
-                | Q(codigo_estudiantil__icontains=palabra)
-            )
-        resultados = list(estudiantes.order_by("persona__apellidos", "persona__nombres")[:MAXIMO_RESULTADOS])
 
     return render(request, "medicina/buscar_paciente.html", {
         "q": q,
@@ -161,6 +194,7 @@ def buscar_paciente(request):
         "hay_mas": len(resultados) == MAXIMO_RESULTADOS,
         "volver": _url_agenda(),
     })
+
 
 @perfil_requerido(GRUPO_MEDICINA)
 def atender_sin_cita(request, estudiante_id):
@@ -172,13 +206,7 @@ def atender_sin_cita(request, estudiante_id):
     )
 
     # Cita de Medicina que el estudiante ya tiene pendiente (si existe).
-    cita_pendiente = (
-        Cita.objects
-        .filter(estudiante=estudiante, estado__es_activo=True, horario__personal__area__nombre=AREA_MEDICINA)
-        .select_related("horario")
-        .order_by("horario__fecha", "horario__hora_inicio")
-        .first()
-    )
+    cita_pendiente = _cita_pendiente_medicina(estudiante)
     cita_ya_empezo = bool(cita_pendiente and cita_pendiente.horario.ya_paso)
 
     if request.method == "POST":
@@ -204,13 +232,14 @@ def atender_sin_cita(request, estudiante_id):
             inicial["tipo"] = tipo
         form = ConsultaSinCitaForm(initial=inicial)
 
+    volver = _url_segura(request, request.GET.get("volver"), reverse("medicina:sin_cita"))
     return _render_formulario(
         request, form, estudiante,
         titulo="Atención sin cita",
         subtitulo="El estudiante no tiene turno o llegó por una emergencia.",
         boton="Guardar consulta", con_tipo=True,
         cita_pendiente=cita_pendiente, cita_ya_empezo=cita_ya_empezo,
-        volver=reverse("medicina:sin_cita"), texto_volver="Volver a la búsqueda",
+        volver=volver, texto_volver="Volver",
     )
 
 
@@ -235,14 +264,7 @@ def consulta_detalle(request, pk):
     # Recordatorio: si fue una atención sin cita y aún tiene una cita de Medicina después, ofrecer cancelarla.
     cita_por_cancelar = None
     if consulta.tipo != ConsultaMedica.Tipo.PROGRAMADA:
-        cita_por_cancelar = (
-            Cita.objects
-            .filter(estudiante=consulta.estudiante, estado__es_activo=True,
-                    horario__personal__area__nombre=AREA_MEDICINA)
-            .select_related("horario")
-            .order_by("horario__fecha", "horario__hora_inicio")
-            .first()
-        )
+        cita_por_cancelar = _cita_pendiente_medicina(consulta.estudiante)
         if cita_por_cancelar and cita_por_cancelar.horario.inicio <= consulta.fecha_atencion:
             cita_por_cancelar = None
 
@@ -257,6 +279,7 @@ def consulta_detalle(request, pk):
         "volver": _url_agenda(consulta.cita.horario.fecha if consulta.cita_id else None),
     })
     return render(request, "medicina/consulta_detalle.html", contexto)
+
 
 @perfil_requerido(GRUPO_MEDICINA)
 def consulta_editar(request, pk):
@@ -305,15 +328,13 @@ def nota_agregar(request, pk):
             messages.success(request, "Nota aclaratoria agregada.")
     return redirect("medicina:consulta_detalle", pk)
 
+
 @perfil_requerido(GRUPO_MEDICINA)
 @require_POST
 def cancelar_cita_pendiente(request, pk):
     """Cancela con un clic la cita que ya no hace falta (el estudiante fue atendido antes sin cita)."""
     consulta = get_object_or_404(ConsultaMedica, pk=pk)
-    volver = request.POST.get("volver")
-    if not (volver and url_has_allowed_host_and_scheme(
-            volver, allowed_hosts={request.get_host()}, require_https=request.is_secure())):
-        volver = reverse("medicina:consulta_detalle", args=[pk])
+    volver = _url_segura(request, request.POST.get("volver"), reverse("medicina:consulta_detalle", args=[pk]))
 
     try:
         cita = servicios.cancelar_cita_por_atencion_previa(request.POST.get("cita"), consulta, request.user)
@@ -326,3 +347,103 @@ def cancelar_cita_pendiente(request, pk):
             "y el estudiante verá el motivo en «Mis citas».",
         )
     return redirect(volver)
+
+
+# =====================================================================
+# Pacientes: lista, ficha con historial y antecedentes
+# =====================================================================
+@perfil_requerido(GRUPO_MEDICINA)
+def pacientes(request):
+    servicios.medico_de(request.user)
+    q = request.GET.get("q", "").strip()
+    resumen = {"ultima": Max("consultas_medicas__fecha_atencion"), "total": Count("consultas_medicas")}
+
+    if len(q) >= 3:
+        # Búsqueda en todos los estudiantes (también cuentas desactivadas: su historia se sigue consultando).
+        estudiantes = (
+            _buscar_estudiantes(q, solo_activos=False)
+            .annotate(**resumen)
+            .order_by("persona__apellidos", "persona__nombres")
+        )
+        modo = "busqueda"
+    else:
+        desde = timezone.now() - timedelta(days=DIAS_RECIENTES)
+        estudiantes = (
+            Estudiante.objects
+            .select_related("persona__usuario", "carrera")
+            .annotate(**resumen)
+            .filter(ultima__gte=desde)
+            .order_by("-ultima")
+        )
+        modo = "recientes"
+
+    pagina = Paginator(estudiantes, 15).get_page(request.GET.get("page"))
+    return render(request, "medicina/pacientes_lista.html", {
+        "q": q,
+        "corto": 0 < len(q) < 3,
+        "modo": modo,
+        "page_obj": pagina,
+        "dias": DIAS_RECIENTES,
+    })
+
+
+@perfil_requerido(GRUPO_MEDICINA)
+def paciente_ficha(request, pk):
+    servicios.medico_de(request.user)
+    estudiante = get_object_or_404(Estudiante.objects.select_related("persona__usuario", "carrera"), pk=pk)
+
+    consultas = list(
+        ConsultaMedica.objects
+        .filter(estudiante=estudiante)
+        .select_related("personal__persona")
+        .annotate(n_notas=Count("notas"))
+        .order_by("-fecha_atencion")
+    )
+
+    # Historial agrupado por día (fecha local), del más reciente al más antiguo.
+    dias = []
+    for c in consultas:
+        fecha = timezone.localdate(c.fecha_atencion)
+        if not dias or dias[-1]["fecha"] != fecha:
+            dias.append({"fecha": fecha, "consultas": []})
+        dias[-1]["consultas"].append(c)
+
+    contexto = _contexto_paciente(estudiante)
+    contexto.update({
+        "en_ficha": True,
+        "dias": dias,
+        "total": len(consultas),
+        "emergencias": sum(1 for c in consultas if c.tipo == ConsultaMedica.Tipo.EMERGENCIA),
+        "ultima": consultas[0].fecha_atencion if consultas else None,
+        "activo": estudiante.persona.usuario.is_active,
+        "aqui": request.get_full_path(),
+    })
+    return render(request, "medicina/paciente_ficha.html", contexto)
+
+
+@perfil_requerido(GRUPO_MEDICINA)
+def antecedentes_editar(request, pk):
+    servicios.medico_de(request.user)
+    estudiante = get_object_or_404(Estudiante.objects.select_related("persona__usuario", "carrera"), pk=pk)
+    antecedentes = (
+        AntecedentesMedicos.objects.filter(estudiante=estudiante).select_related("actualizado_por__persona").first()
+        or AntecedentesMedicos(estudiante=estudiante)
+    )
+    ficha = reverse("medicina:paciente_ficha", args=[estudiante.pk])
+
+    form = AntecedentesForm(request.POST or None, instance=antecedentes)
+    if request.method == "POST" and form.is_valid():
+        try:
+            servicios.guardar_antecedentes(form.save(commit=False), request.user)
+        except ValidationError as error:
+            form.add_error(None, " ".join(error.messages))
+        else:
+            messages.success(request, "Antecedentes actualizados.")
+            return redirect(ficha)
+
+    return render(request, "medicina/antecedentes_form.html", {
+        "form": form,
+        "estudiante": estudiante,
+        "antecedentes": antecedentes if antecedentes.pk else None,
+        "volver": ficha,
+    })

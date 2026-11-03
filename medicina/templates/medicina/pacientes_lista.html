@@ -1,0 +1,82 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Pacientes{% endblock %}
+{% block titulo_pagina %}Pacientes{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+{% include "medicina/_estilos_medicina.html" %}
+<style>
+  .buscador { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; }
+  .buscador input { flex: 1; min-width: 220px; height: 40px; padding: 0 12px; border: 1px solid #cfd8d3; border-radius: 10px; font: inherit; }
+  .buscador input:focus { outline: none; border-color: #1f5f3e; box-shadow: 0 0 0 3px rgba(31, 95, 62, .15); }
+  .fila-pac { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;
+              padding: 12px 10px; border-top: 1px solid #eef2ef; text-decoration: none; color: inherit; border-radius: 10px; }
+  .fila-pac:first-of-type { border-top: none; }
+  .fila-pac:hover { background: #f4f7f5; }
+  .fila-pac .nombre { font-weight: 700; color: #1f2a25; }
+  .fila-pac .datos { color: #5b6661; font-size: .86rem; }
+  .fila-pac .derecha { text-align: right; font-size: .86rem; color: #3d4843; }
+  .fila-pac .derecha strong { color: #184c32; }
+  .inactiva { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #6b7570; color: #fff; font-size: .72rem; font-weight: 600; }
+  .paginacion { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 14px; color: #5b6661; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor-m" style="max-width: 900px;">
+
+  <div class="encabezado-m">
+    <div>
+      <h2>Pacientes</h2>
+      <div class="sub">Historia clínica de Medicina de cada estudiante.</div>
+    </div>
+    <a class="boton primario" href="{% url 'medicina:sin_cita' %}">+ Atención sin cita</a>
+  </div>
+
+  <div class="panel-m">
+    <form method="get" class="buscador">
+      <input type="search" name="q" value="{{ q }}" placeholder="Cédula, código o nombres" aria-label="Buscar paciente">
+      <button type="submit" class="boton primario">Buscar</button>
+      {% if q %}<a class="boton" href="?">Limpiar</a>{% endif %}
+    </form>
+    {% if corto %}<p class="nota-m" style="margin-top:8px;">Escribe al menos 3 caracteres.</p>{% endif %}
+  </div>
+
+  <div class="panel-m">
+    <h3>{% if modo == "busqueda" %}Resultados{% else %}Atendidos en los últimos {{ dias }} días{% endif %}</h3>
+    {% for e in page_obj %}
+      <a class="fila-pac" href="{% url 'medicina:paciente_ficha' e.pk %}">
+        <div>
+          <div class="nombre">
+            {{ e.persona.nombre_completo }}
+            {% if not e.persona.usuario.is_active %}<span class="inactiva">Cuenta desactivada</span>{% endif %}
+          </div>
+          <div class="datos">{{ e.codigo_estudiantil }} · C.I. {{ e.persona.usuario.cedula }} · {{ e.carrera }}</div>
+        </div>
+        <div class="derecha">
+          {% if e.total %}
+            Última atención: <strong>{{ e.ultima|date:"d/m/Y" }}</strong><br>
+            {{ e.total }} consulta{{ e.total|pluralize }}
+          {% else %}
+            Sin consultas médicas
+          {% endif %}
+        </div>
+      </a>
+    {% empty %}
+      <p class="nota-m">
+        {% if modo == "busqueda" %}No se encontró ningún estudiante con esos datos.{% else %}No hay pacientes atendidos en los últimos {{ dias }} días. Usa el buscador para encontrar a cualquier estudiante.{% endif %}
+      </p>
+    {% endfor %}
+
+    {% if page_obj.paginator.num_pages > 1 %}
+      <div class="paginacion">
+        {% if page_obj.has_previous %}<a class="boton chico" href="?{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">‹ Anterior</a>{% endif %}
+        <span>Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}<a class="boton chico" href="?{% if q %}q={{ q|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">Siguiente ›</a>{% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

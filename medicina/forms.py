@@ -1,6 +1,7 @@
 from django import forms
 
 from .models import ConsultaMedica
+from .models import AntecedentesMedicos, ConsultaMedica
 
 FORMATO_FECHA_HORA = "%Y-%m-%dT%H:%M"
 
@@ -66,3 +67,20 @@ class NotaAclaratoriaForm(forms.Form):
         label="Nueva nota aclaratoria",
         widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Corrección o información adicional"}),
     )
+    
+
+class AntecedentesForm(forms.ModelForm):
+    class Meta:
+        model = AntecedentesMedicos
+        fields = [
+            "tipo_sangre", "alergias", "personales", "quirurgicos", "familiares",
+            "medicacion_habitual", "habitos", "gineco_obstetricos",
+        ]
+        widgets = {
+            campo: forms.Textarea(attrs={"rows": 2})
+            for campo in ("alergias", "personales", "quirurgicos", "familiares",
+                          "medicacion_habitual", "habitos", "gineco_obstetricos")
+        }
+        help_texts = {
+            "gineco_obstetricos": "Solo si aplica.",
+        }

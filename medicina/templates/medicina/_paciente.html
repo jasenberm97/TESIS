@@ -10,10 +10,20 @@
     <dt>Contacto</dt>
     <dd>{% if estudiante.persona.telefono %}{{ estudiante.persona.telefono }}<br>{% endif %}{{ estudiante.persona.usuario.email }}</dd>
   </dl>
+  {% if not en_ficha %}
+    <a class="enlace-m" href="{% url 'medicina:paciente_ficha' estudiante.pk %}"{% if en_formulario %} target="_blank" rel="noopener"{% endif %}>
+      Ver ficha e historial{% if en_formulario %} (nueva pestaña){% endif %} →
+    </a>
+  {% endif %}
 </div>
 
 <div class="panel-m">
-  <h3>Antecedentes</h3>
+  <div class="titulo-con-enlace">
+    <h3>Antecedentes</h3>
+    <a class="enlace-m" href="{% url 'medicina:antecedentes_editar' estudiante.pk %}"{% if en_formulario %} target="_blank" rel="noopener" title="Se abre en otra pestaña para no perder la consulta"{% endif %}>
+      {% if antecedentes %}Editar{% else %}Registrar{% endif %}
+    </a>
+  </div>
   {% if antecedentes %}
     {% if antecedentes.alergias %}
       <div class="alerta-alergia">Alergias: {{ antecedentes.alergias }}</div>
@@ -29,21 +39,26 @@
       {% if antecedentes.habitos %}<dt>Hábitos</dt><dd>{{ antecedentes.habitos }}</dd>{% endif %}
       {% if antecedentes.gineco_obstetricos %}<dt>Gineco-obstétricos</dt><dd>{{ antecedentes.gineco_obstetricos }}</dd>{% endif %}
     </dl>
+    <p class="nota-m" style="margin-top:10px; font-size:.78rem;">
+      Actualizado el {{ antecedentes.fecha_actualizacion|date:"d/m/Y H:i" }}{% if antecedentes.actualizado_por %} por {{ antecedentes.actualizado_por.persona.nombre_completo }}{% endif %}
+    </p>
   {% else %}
     <p class="nota-m">Aún no hay antecedentes registrados para este paciente.</p>
   {% endif %}
 </div>
 
-<div class="panel-m">
-  <h3>Consultas anteriores</h3>
-  <div class="historial-m">
-    {% for c in anteriores %}
-      <a href="{% url 'medicina:consulta_detalle' c.pk %}">
-        <strong>{{ c.fecha_atencion|date:"d/m/Y" }}</strong>
-        {{ c.diagnostico|truncatechars:70 }}
-      </a>
-    {% empty %}
-      <p class="nota-m">No tiene consultas médicas anteriores.</p>
-    {% endfor %}
+{% if not en_ficha %}
+  <div class="panel-m">
+    <h3>Consultas anteriores</h3>
+    <div class="historial-m">
+      {% for c in anteriores %}
+        <a href="{% url 'medicina:consulta_detalle' c.pk %}"{% if en_formulario %} target="_blank" rel="noopener"{% endif %}>
+          <strong>{{ c.fecha_atencion|date:"d/m/Y" }}</strong>
+          {{ c.diagnostico|truncatechars:70 }}
+        </a>
+      {% empty %}
+        <p class="nota-m">No tiene consultas médicas anteriores.</p>
+      {% endfor %}
+    </div>
   </div>
-</div>
+{% endif %}

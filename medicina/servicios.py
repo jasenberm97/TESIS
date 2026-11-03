@@ -153,3 +153,10 @@ def cancelar_cita_por_atencion_previa(cita_id, consulta, usuario):
         fecha = timezone.localtime(consulta.fecha_atencion)
         motivo = f"Fue atendido antes, sin cita, el {fecha:%d/%m/%Y}."
         return servicios_citas.cancelar_cita(cita.pk, usuario, motivo)
+    
+def guardar_antecedentes(antecedentes, usuario):
+    """Crea o actualiza la ficha de antecedentes dejando constancia de quién la actualizó."""
+    antecedentes.actualizado_por = medico_de(usuario)
+    antecedentes.full_clean()
+    antecedentes.save()
+    return antecedentes
