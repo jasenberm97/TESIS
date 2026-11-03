@@ -1,5 +1,4 @@
-from datetime import date, timedelta
-
+from datetime import date, datetime, time, timedelta
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
@@ -15,6 +14,7 @@ from usuarios.grupos import GRUPO_ADMINISTRADOR, GRUPO_ESTUDIANTE, GRUPOS_POR_AR
 from usuarios.models import Area, Personal
 from usuarios.permisos import perfil_requerido
 from usuarios.comun import AREA_MEDICINA
+from medicina.models import ConsultaMedica
 
 from . import servicios
 from .forms import (
@@ -689,6 +689,25 @@ def _dia_habil(fecha, paso):
         fecha += timedelta(days=paso)
     return fecha
 
+def _marcar_atencion_previa(citas):
+    """
+    Marca en cada cita la última atención SIN cita del estudiante anterior a su turno
+    (últimos 30 días), para recordarle al médico que esa cita quizá ya no hace falta.
+    """
+    if not citas:
+        return
+    desde = min(c.horario.fecha for c in citas) - timedelta(days=30)
+    inicio = timezone.make_aware(datetime.combine(desde, time.min))
+    atenciones = {}
+    for consulta in (
+        ConsultaMedica.objects
+        .filter(estudiante_id__in={c.estudiante_id for c in citas}, cita__isnull=True, fecha_atencion__gte=inicio)
+        .order_by("fecha_atencion")
+    ):
+        atenciones.setdefault(consulta.estudiante_id, []).append(consulta)
+    for c in citas:
+        previas = [a for a in atenciones.get(c.estudiante_id, []) if a.fecha_atencion < c.horario.inicio]
+        c.atencion_previa = previas[-1] if previas else None
 
 @perfil_requerido(*GRUPOS_PERSONAL)
 def agenda(request):
@@ -760,6 +779,11 @@ def agenda(request):
         .order_by("horario__fecha", "horario__hora_inicio")
     )
 
+    if es_medicina:
+        _marcar_atencion_previa(
+            [i["cita"] for i in items if i.get("cita") and i["cita"].estado.es_activo] + sin_registrar
+        )
+    
     return render(request, "citas/agenda.html", {
         "personal": personal,
         "es_medicina": es_medicina,

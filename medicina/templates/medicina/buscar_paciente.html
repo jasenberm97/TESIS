@@ -1,0 +1,66 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}Atención sin cita{% endblock %}
+{% block titulo_pagina %}Atención sin cita{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+{% include "medicina/_estilos_medicina.html" %}
+<style>
+  .buscador { display: flex; gap: 8px; flex-wrap: wrap; margin: 0; }
+  .buscador input { flex: 1; min-width: 220px; height: 40px; padding: 0 12px; border: 1px solid #cfd8d3; border-radius: 10px; font: inherit; }
+  .buscador input:focus { outline: none; border-color: #1f5f3e; box-shadow: 0 0 0 3px rgba(31, 95, 62, .15); }
+  .resultado { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 0; border-top: 1px solid #eef2ef; }
+  .resultado:first-of-type { border-top: none; }
+  .resultado .nombre { font-weight: 700; color: #1f2a25; }
+  .resultado .datos { color: #5b6661; font-size: .86rem; }
+  .resultado .botones { display: flex; gap: 8px; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor-m" style="max-width: 820px;">
+
+  <div class="encabezado-m">
+    <div>
+      <h2>Buscar paciente</h2>
+      <div class="sub">Para estudiantes que llegan sin turno o por una emergencia. En una emergencia, atiende primero y registra después.</div>
+    </div>
+    <a class="boton" href="{{ volver }}">Volver a Mi agenda</a>
+  </div>
+
+  <div class="panel-m">
+    <form method="get" class="buscador">
+      <input type="search" name="q" value="{{ q }}" placeholder="Cédula, código o nombres" autofocus aria-label="Buscar estudiante">
+      <button type="submit" class="boton primario">Buscar</button>
+    </form>
+  </div>
+
+  {% if corto %}
+    <div class="panel-m"><p class="nota-m">Escribe al menos 3 caracteres.</p></div>
+  {% elif q %}
+    <div class="panel-m">
+      <h3>Resultados</h3>
+      {% for e in resultados %}
+        <div class="resultado">
+          <div>
+            <div class="nombre">{{ e.persona.nombre_completo }}</div>
+            <div class="datos">{{ e.codigo_estudiantil }} · C.I. {{ e.persona.usuario.cedula }} · {{ e.carrera }}</div>
+          </div>
+          <div class="botones">
+            <a class="boton chico" href="{% url 'medicina:atender_sin_cita' e.pk %}?tipo=ESPONTANEA">Sin cita</a>
+            <a class="boton chico peligro" href="{% url 'medicina:atender_sin_cita' e.pk %}?tipo=EMERGENCIA">Emergencia</a>
+          </div>
+        </div>
+      {% empty %}
+        <p class="nota-m">
+          No se encontró ningún estudiante activo con esos datos. Si el estudiante aún no tiene cuenta,
+          debe registrarse en el sistema; en una emergencia, atiéndelo primero y registra la consulta después.
+        </p>
+      {% endfor %}
+      {% if hay_mas %}<p class="nota-m" style="margin-top:10px;">Se muestran los primeros 20. Escribe más datos para afinar la búsqueda.</p>{% endif %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

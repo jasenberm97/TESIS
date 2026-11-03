@@ -1,0 +1,177 @@
+{% extends "principal/base.html" %}
+
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block titulo_pagina %}Consulta médica{% endblock %}
+
+{% block estilos %}
+{% include "citas/_estilos_citas.html" %}
+{% include "medicina/_estilos_medicina.html" %}
+<style>
+  .leyenda { background: #fff; border: 1px solid #e3e8e5; border-radius: 12px; padding: 10px 16px; margin-bottom: 14px; color: #3d4843; font-size: .9rem; }
+  .leyenda .req { color: #a23b2c; font-weight: 700; }
+  .tipos { display: flex; gap: 10px; flex-wrap: wrap; }
+  .tipo-opcion { display: flex; align-items: center; gap: 8px; border: 1px solid #cfd8d3; border-radius: 10px; padding: 10px 14px; cursor: pointer; font-weight: 600; color: #3d4843; }
+  .tipo-opcion input { width: auto; margin: 0; accent-color: #1f5f3e; }
+  .tipo-opcion:has(input:checked) { border-color: #1f5f3e; box-shadow: 0 0 0 2px rgba(31, 95, 62, .2); color: #184c32; }
+  .aviso-m { background: #fff; border: 1px solid #ecd9a6; border-left: 5px solid #b8860b; border-radius: 0 12px 12px 0; padding: 12px 16px; margin-bottom: 14px; color: #5b4a12; }
+  .aviso-m p { margin: 0; }
+  .casilla { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; font-weight: 600; color: #3d4843; cursor: pointer; }
+  .casilla input { width: auto; margin: 3px 0 0; accent-color: #1f5f3e; }
+  .casilla small { display: block; font-weight: 400; color: #6b7570; }
+</style>
+{% endblock %}
+
+{% block contenido %}
+<div class="contenedor-m">
+
+  <div class="encabezado-m">
+    <div>
+      <h2>{{ titulo }}</h2>
+      <div class="sub">{{ subtitulo }}</div>
+    </div>
+    <a class="boton" href="{{ volver }}">{{ texto_volver }}</a>
+  </div>
+
+  <div class="rejilla-m">
+    <aside>
+      {% include "medicina/_paciente.html" %}
+    </aside>
+
+    <form method="post" novalidate id="form-consulta">
+      {% csrf_token %}
+
+      <div class="leyenda">
+        Los campos marcados con <span class="req">*</span> son obligatorios:
+        {% if con_tipo %}tipo de atención, {% endif %}motivo de consulta, diagnóstico y fecha de atención.
+        Los demás se llenan si se registraron.
+      </div>
+
+      {% if cita_pendiente %}
+        <div class="aviso-m">
+          {% if cita_ya_empezo %}
+            <p>
+              Este estudiante tiene una cita de Medicina <strong>hoy a las {{ cita_pendiente.horario.hora_inicio|time:"H:i" }}</strong>.
+              Si lo estás atendiendo por esa cita, usa <strong>Atender</strong> desde Mi agenda.
+            </p>
+          {% else %}
+            <p>
+              Este estudiante tiene una cita de Medicina el
+              <strong>{{ cita_pendiente.horario.fecha|date:"l d/m/Y" }} a las {{ cita_pendiente.horario.hora_inicio|time:"H:i" }}</strong>.
+              Puedes atenderlo ahora igual.
+            </p>
+          {% endif %}
+          <label class="casilla">
+            {{ form.cancelar_cita_pendiente }}
+            <span>
+              Cancelar esa cita, porque ya fue atendido
+              <small>El turno quedará libre y el estudiante verá el motivo en «Mis citas». Si la cita le sirve como control, no marques esta casilla.</small>
+            </span>
+          </label>
+        </div>
+      {% endif %}
+
+      {% if form.non_field_errors %}
+        <div class="error-general">
+          {% for e in form.non_field_errors %}<div>{{ e }}</div>{% endfor %}
+        </div>
+      {% elif form.errors %}
+        <div class="error-general">Revisa los campos marcados en rojo.</div>
+      {% endif %}
+
+      {% if con_tipo %}
+        <div class="panel-m">
+          <h3>Tipo de atención <span style="color:#a23b2c">*</span></h3>
+          <div class="tipos">
+            {% for opcion in form.tipo %}
+              <label class="tipo-opcion">{{ opcion.tag }} {{ opcion.choice_label }}</label>
+            {% endfor %}
+          </div>
+          {% for e in form.tipo.errors %}<div class="campo-m"><div class="error">{{ e }}</div></div>{% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="panel-m">
+        <h3>Motivo y enfermedad actual</h3>
+        {% include "medicina/_campo.html" with campo=form.motivo_consulta %}
+        {% include "medicina/_campo.html" with campo=form.anamnesis %}
+      </div>
+
+      <div class="panel-m">
+        <h3>Signos vitales</h3>
+        <div class="campos-4">
+          {% include "medicina/_campo.html" with campo=form.presion_sistolica %}
+          {% include "medicina/_campo.html" with campo=form.presion_diastolica %}
+          {% include "medicina/_campo.html" with campo=form.frecuencia_cardiaca %}
+          {% include "medicina/_campo.html" with campo=form.frecuencia_respiratoria %}
+          {% include "medicina/_campo.html" with campo=form.temperatura %}
+          {% include "medicina/_campo.html" with campo=form.saturacion_oxigeno %}
+          {% include "medicina/_campo.html" with campo=form.peso %}
+          {% include "medicina/_campo.html" with campo=form.talla %}
+        </div>
+        <div class="imc" id="imc">IMC: se calcula con el peso y la talla</div>
+      </div>
+
+      <div class="panel-m">
+        <h3>Examen físico</h3>
+        {% include "medicina/_campo.html" with campo=form.examen_fisico %}
+      </div>
+
+      <div class="panel-m">
+        <h3>Diagnóstico e indicaciones</h3>
+        {% include "medicina/_campo.html" with campo=form.diagnostico %}
+        {% include "medicina/_campo.html" with campo=form.observaciones %}
+        {% include "medicina/_campo.html" with campo=form.derivacion %}
+      </div>
+
+      <div class="panel-m">
+        <h3>Registro</h3>
+        {% include "medicina/_campo.html" with campo=form.fecha_atencion %}
+      </div>
+
+      <div class="acciones-m">
+        <a class="boton" href="{{ volver }}">Cancelar</a>
+        <button type="submit" class="boton primario" id="boton-guardar">{{ boton }}</button>
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const peso = document.getElementById("id_peso");
+    const talla = document.getElementById("id_talla");
+    const salida = document.getElementById("imc");
+    if (peso && talla && salida) {
+      const clasificar = function (v) {
+        if (v < 18.5) return "Bajo peso";
+        if (v < 25) return "Normal";
+        if (v < 30) return "Sobrepeso";
+        return "Obesidad";
+      };
+      const calcular = function () {
+        const p = parseFloat(peso.value.replace(",", "."));
+        const t = parseFloat(talla.value.replace(",", "."));
+        if (p > 0 && t > 0) {
+          const v = p / (t * t);
+          salida.textContent = "IMC: " + v.toFixed(2) + " · " + clasificar(v);
+        } else {
+          salida.textContent = "IMC: se calcula con el peso y la talla";
+        }
+      };
+      peso.addEventListener("input", calcular);
+      talla.addEventListener("input", calcular);
+      calcular();
+    }
+
+    // Evita guardar dos veces si se pulsa el botón repetidamente
+    document.getElementById("form-consulta").addEventListener("submit", function () {
+      const boton = document.getElementById("boton-guardar");
+      boton.disabled = true;
+      boton.textContent = "Guardando…";
+    });
+  })();
+</script>
+{% endblock %}

@@ -54,6 +54,12 @@
   .pausa { text-align: center; font-size: .8rem; color: #6b7570; padding: 6px 0; border-top: 1px dashed #cfd8d3; border-bottom: 1px dashed #cfd8d3; }
   .vacio { text-align: center; padding: 30px 20px; color: #5b6661; }
 
+  .atendido-antes { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;
+                    background: #fffaf0; border: 1px solid #ecd9a6; border-radius: 10px; padding: 8px 12px; color: #5b4a12; font-size: .88rem; }
+  .atendido-antes a { color: #184c32; }
+  .atendido-antes form { margin: 0; }
+  .pendientes .atendido-antes { width: 100%; box-sizing: border-box; }
+
   .estado { display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
   .estado.pendiente { border: 1px solid #1f5f3e; color: #1f5f3e; background: #fff; }
   .estado.confirmada, .estado.atendida { background: #1f5f3e; color: #fff; }
@@ -76,6 +82,7 @@
       <div class="sub">{{ personal.persona.nombre_completo }} · {{ personal.area }}</div>
     </div>
     <div class="navegacion">
+      {% if es_medicina %}<a class="boton chico primario" href="{% url 'medicina:sin_cita' %}">+ Atención sin cita</a>{% endif %}
       <a class="boton chico" href="?dia={{ dia_anterior|date:'Y-m-d' }}" aria-label="Día anterior">‹</a>
       {% if dia != hoy %}<a class="boton chico" href="?">Hoy</a>{% endif %}
       <a class="boton chico" href="?dia={{ dia_siguiente|date:'Y-m-d' }}" aria-label="Día siguiente">›</a>
@@ -116,6 +123,18 @@
               <button type="submit" class="boton chico peligro">No asistió</button>
             </form>
           </span>
+          {% if c.atencion_previa %}
+            <div class="atendido-antes">
+              <span>
+                Ya fue atendido sin cita el {{ c.atencion_previa.fecha_atencion|date:"l d/m" }} ({{ c.atencion_previa.get_tipo_display }}).
+                <a href="{% url 'medicina:consulta_detalle' c.atencion_previa.pk %}">Ver esa consulta</a>
+              </span>
+              <form method="post" action="{% url 'medicina:cancelar_cita_pendiente' c.atencion_previa.pk %}">
+                {% csrf_token %}<input type="hidden" name="cita" value="{{ c.pk }}"><input type="hidden" name="volver" value="{{ volver }}">
+                <button type="submit" class="boton chico">Cancelar: ya fue atendido</button>
+              </form>
+            </div>
+          {% endif %}
         </div>
       {% endfor %}
     </div>
@@ -155,6 +174,20 @@
                   <div class="datos">
                     {% if c.estudiante.persona.telefono %}Cel. {{ c.estudiante.persona.telefono }} · {% endif %}{{ c.estudiante.persona.usuario.email }}
                   </div>
+
+                  {% if c.atencion_previa %}
+                    <div class="atendido-antes">
+                      <span>
+                        Ya fue atendido sin cita el {{ c.atencion_previa.fecha_atencion|date:"l d/m" }} ({{ c.atencion_previa.get_tipo_display }}).
+                        Si esta cita ya no es necesaria, cancélala.
+                        <a href="{% url 'medicina:consulta_detalle' c.atencion_previa.pk %}">Ver esa consulta</a>
+                      </span>
+                      <form method="post" action="{% url 'medicina:cancelar_cita_pendiente' c.atencion_previa.pk %}">
+                        {% csrf_token %}<input type="hidden" name="cita" value="{{ c.pk }}"><input type="hidden" name="volver" value="{{ volver }}">
+                        <button type="submit" class="boton chico">Cancelar: ya fue atendido</button>
+                      </form>
+                    </div>
+                  {% endif %}
 
                   {% if es_medicina and c.consulta_medica %}
                     <div class="acciones">

@@ -44,3 +44,25 @@ class ConsultaMedicaForm(forms.ModelForm):
         for nombre, ejemplo in self.EJEMPLOS.items():
             self.fields[nombre].widget.attrs["placeholder"] = ejemplo
         self.fields["diagnostico"].widget.attrs["placeholder"] = "Diagnóstico presuntivo o definitivo"
+
+
+TIPOS_SIN_CITA = [
+    (valor, etiqueta) for valor, etiqueta in ConsultaMedica.Tipo.choices
+    if valor != ConsultaMedica.Tipo.PROGRAMADA
+]
+
+
+class ConsultaSinCitaForm(ConsultaMedicaForm):
+    """Igual que la consulta normal, más el tipo: Sin cita o Emergencia."""
+    tipo = forms.ChoiceField(label="Tipo de atención", choices=TIPOS_SIN_CITA, widget=forms.RadioSelect)
+    cancelar_cita_pendiente = forms.BooleanField(required=False)  # no se guarda en la consulta
+
+    class Meta(ConsultaMedicaForm.Meta):
+        fields = ["tipo"] + ConsultaMedicaForm.Meta.fields
+
+
+class NotaAclaratoriaForm(forms.Form):
+    texto = forms.CharField(
+        label="Nueva nota aclaratoria",
+        widget=forms.Textarea(attrs={"rows": 3, "placeholder": "Corrección o información adicional"}),
+    )
